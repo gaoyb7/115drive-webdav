@@ -243,7 +243,6 @@ func (h *Handler) getProxyURL(originURL string, r *http.Request) string {
 		} else {
 			host = r.Host
 		}
-
 	}
 
 	return fmt.Sprintf("http://%s:%d/proxy?target=%s", host, port, url.QueryEscape(originURL))

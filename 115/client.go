@@ -180,28 +180,6 @@ func (c *DriveClient) importCookies(domain string, path string, cookies map[stri
 	c.cookieJar.SetCookies(url, cks)
 }
 
-func (c *DriveClient) ExportCookies(url string) string {
-	u, _ := neturl.Parse(url)
-	cookies := make(map[string]string)
-	for _, cookie := range c.cookieJar.Cookies(u) {
-		cookies[cookie.Name] = cookie.Value
-	}
-	if len(cookies) > 0 {
-		buf, isFirst := strings.Builder{}, true
-		for ck, cv := range cookies {
-			if !isFirst {
-				buf.WriteString("; ")
-			}
-			buf.WriteString(ck)
-			buf.WriteRune('=')
-			buf.WriteString(cv)
-			isFirst = false
-		}
-		return buf.String()
-	}
-	return ""
-}
-
 func slashClean(name string) string {
 	if name == "" || name[0] != '/' {
 		name = "/" + name
