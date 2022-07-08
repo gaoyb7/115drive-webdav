@@ -20,6 +20,10 @@ import (
 )
 
 type Handler struct {
+	// ServerHost
+	ServerHost string
+	// ServerPort
+	ServerPort int
 	// Prefix is the URL path prefix to strip from WebDAV resource paths.
 	Prefix string
 	// LockSystem is the lock management system.
@@ -222,11 +226,27 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		logrus.WithError(err).Errorf("handleGetHeadPost, call h.DriveClient.GetURL fail, pick_code: %s", fi.PickCode)
 		return http.StatusInternalServerError, err
 	}
-	proxyURL := fmt.Sprintf("http://%s/proxy?target=%s", r.Host, url.QueryEscape(fileURL))
+	proxyURL := h.getProxyURL(fileURL, r)
 
 	w.Header().Set("ETag", etag)
 	http.Redirect(w, r, proxyURL, 302)
 	return 0, nil
+}
+
+func (h *Handler) getProxyURL(originURL string, r *http.Request) string {
+	host := h.ServerHost
+	port := h.ServerPort
+	if h.ServerHost == "0.0.0.0" || len(h.ServerHost) == 0 {
+		if strings.Contains(r.Host, ":") {
+			items := strings.Split(r.Host, ":")
+			host = items[0]
+		} else {
+			host = r.Host
+		}
+
+	}
+
+	return fmt.Sprintf("http://%s:%d/proxy?target=%s", host, port, url.QueryEscape(originURL))
 }
 
 func (h *Handler) handleLock(w http.ResponseWriter, r *http.Request) (retStatus int, retErr error) {

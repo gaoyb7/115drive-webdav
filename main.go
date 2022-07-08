@@ -15,10 +15,11 @@ import (
 var (
 	webdavHandler webdav.Handler
 
-	cliPort     = flag.Int("port", 8080, "server port")
 	cliUid      = flag.String("uid", "", "115 cookie uid")
 	cliCid      = flag.String("cid", "", "115 cookie cid")
 	cliSeid     = flag.String("seid", "", "115 cookie seid")
+	cliHost     = flag.String("host", "0.0.0.0", "webdav server host")
+	cliPort     = flag.Int("port", 8080, "webdav server port")
 	cliUser     = flag.String("user", "user", "webdav auth username")
 	cliPassword = flag.String("pwd", "123456", "webdav auth password")
 )
@@ -27,12 +28,14 @@ func main() {
 	flag.Parse()
 	logrus.SetReportCaller(true)
 	_115.MustInit115DriveClient(*cliUid, *cliCid, *cliSeid)
-	startWebdavServer(*cliPort)
+	startWebdavServer(*cliHost, *cliPort)
 }
 
-func startWebdavServer(port int) {
+func startWebdavServer(host string, port int) {
 	prefix := "/dav"
 	webdavHandler = webdav.Handler{
+		ServerHost:  host,
+		ServerPort:  port,
 		Prefix:      prefix,
 		LockSystem:  webdav.NewMemLS(),
 		DriveClient: _115.Get115DriveClient(),
@@ -76,7 +79,7 @@ func startWebdavServer(port int) {
 		c.AbortWithStatus(http.StatusNotFound)
 	})
 
-	if err := r.Run(fmt.Sprintf("0.0.0.0:%d", port)); err != nil {
+	if err := r.Run(fmt.Sprintf("%s:%d", host, port)); err != nil {
 		logrus.Panic(err)
 	}
 }
