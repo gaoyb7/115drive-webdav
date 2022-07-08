@@ -15,7 +15,7 @@ import (
 	"time"
 
 	_115 "github.com/gaoyb7/115drive-webdav/115"
-
+	"github.com/gaoyb7/115drive-webdav/common"
 	"github.com/sirupsen/logrus"
 )
 
@@ -185,7 +185,7 @@ func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request) (status 
 			allow = "OPTIONS, LOCK, GET, HEAD, POST, PROPPATCH, UNLOCK, PROPFIND"
 		}
 	} else {
-		if !errors.Is(err, _115.ErrNotFound) {
+		if !errors.Is(err, common.ErrNotFound) {
 			logrus.WithError(err).Errorf("handleOptions, call h.DriveClient.GetFile fail, req_path: %s", reqPath)
 		}
 	}
@@ -354,7 +354,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	ctx := r.Context()
 	fi, err := h.DriveClient.GetFile(reqPath)
 	if err != nil {
-		if errors.Is(err, _115.ErrNotFound) {
+		if errors.Is(err, common.ErrNotFound) {
 			return http.StatusNotFound, err
 		}
 		logrus.WithError(err).Errorf("handlePropfind, call h.DriveClient.GetFile fail, req_path: %s", reqPath)
@@ -429,7 +429,7 @@ func (h *Handler) handleProppatch(w http.ResponseWriter, r *http.Request) (statu
 	ctx := r.Context()
 
 	if _, err := h.DriveClient.GetFile(reqPath); err != nil {
-		if errors.Is(err, _115.ErrNotFound) {
+		if errors.Is(err, common.ErrNotFound) {
 			return http.StatusNotFound, err
 		}
 		logrus.WithError(err).Errorf("handleProppatch, call h.DriveClient.GetFile fail, req_path: %s", reqPath)

@@ -16,8 +16,6 @@ import (
 
 type WalkFunc func(path string, info *_115.FileInfo, err error) error
 
-// slashClean is equivalent to but slightly more efficient than
-// path.Clean("/" + name).
 func slashClean(name string) string {
 	if name == "" || name[0] != '/' {
 		name = "/" + name

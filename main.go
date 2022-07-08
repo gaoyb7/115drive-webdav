@@ -1,14 +1,13 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	_115 "github.com/gaoyb7/115drive-webdav/115"
 	"github.com/gaoyb7/115drive-webdav/webdav"
-
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -59,38 +58,18 @@ func startWebdavServer(port int) {
 	dav.Handle("MOVE", "/*path", webdavHandle)
 
 	r.Any("/proxy", func(c *gin.Context) {
-		// get target url
-		targetURL := c.Query("target")
-		u, err := url.Parse(targetURL)
-		if err != nil {
-			logrus.WithError(err).Errorf("call url.Parse fail")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		// proxy request
-		proxyReq, _ := http.NewRequest(c.Request.Method, targetURL, c.Request.Body)
-		for h, v := range c.Request.Header {
-			proxyReq.Header[h] = v
-		}
-		proxyReq.Header.Set("Referer", "https://115.com/")
-		proxyReq.Header.Set("User-Agent", _115.UserAgent)
-		proxyReq.Header.Set("Host", u.Host)
-		proxyResp, err := _115.Get115DriveClient().GetWebClient().Do(proxyReq)
-		if err != nil {
-			logrus.WithError(err).Errorf("proxy request fail")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-		defer proxyResp.Body.Close()
-
-		// proxy response
-		contentType := proxyResp.Header.Get("Content-Type")
-		extraHeaders := make(map[string]string)
-		for h, v := range proxyResp.Header {
-			extraHeaders[h] = v[0]
-		}
-		c.DataFromReader(proxyResp.StatusCode, proxyResp.ContentLength, contentType, proxyResp.Body, extraHeaders)
+		defer func() {
+			if err := recover(); err != nil {
+				if realErr, ok := err.(error); ok {
+					if errors.Is(realErr, http.ErrAbortHandler) {
+						return
+					}
+				}
+				logrus.Errorf("panic: %v", err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+			}
+		}()
+		_115.Get115DriveClient().Proxy(c.Writer, c.Request)
 	})
 
 	r.GET("/", func(c *gin.Context) {
