@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -59,25 +58,6 @@ func startWebdavServer(host string, port int) {
 	dav.Handle("PROPPATCH", "/*path", webdavHandle)
 	dav.Handle("COPY", "/*path", webdavHandle)
 	dav.Handle("MOVE", "/*path", webdavHandle)
-
-	r.Any("/proxy", func(c *gin.Context) {
-		defer func() {
-			if err := recover(); err != nil {
-				if realErr, ok := err.(error); ok {
-					if errors.Is(realErr, http.ErrAbortHandler) {
-						return
-					}
-				}
-				logrus.Errorf("panic: %v", err)
-				c.AbortWithStatus(http.StatusInternalServerError)
-			}
-		}()
-		_115.Get115DriveClient().Proxy(c.Writer, c.Request)
-	})
-
-	r.GET("/", func(c *gin.Context) {
-		c.AbortWithStatus(http.StatusNotFound)
-	})
 
 	if err := r.Run(fmt.Sprintf("%s:%d", host, port)); err != nil {
 		logrus.Panic(err)

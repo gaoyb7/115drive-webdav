@@ -1,6 +1,7 @@
 package _115
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -27,6 +28,10 @@ type DriveClient struct {
 	reserveProxy *httputil.ReverseProxy
 }
 
+func Get115DriveClient() *DriveClient {
+	return defaultClient
+}
+
 func MustInit115DriveClient(uid string, cid string, seid string) {
 	cookieJar, err := cookiejar.New(nil)
 	if err != nil {
@@ -41,22 +46,14 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 	defaultClient.reserveProxy = &httputil.ReverseProxy{
 		Transport: defaultClient.HttpClient.Transport,
 		Director: func(req *http.Request) {
-			targetURL := req.URL.Query().Get("target")
-			u, _ := url.Parse(targetURL)
-			req.URL = u
-			req.Host = u.Host
 			req.Header.Set("Referer", "https://115.com/")
 			req.Header.Set("User-Agent", UserAgent)
-			req.Header.Set("Host", u.Host)
+			req.Header.Set("Host", req.Host)
 		},
 	}
 
 	// TODO: login check
 	defaultClient.ImportCredential(uid, cid, seid)
-}
-
-func Get115DriveClient() *DriveClient {
-	return defaultClient
 }
 
 func (c *DriveClient) GetFiles(path string) ([]FileInfo, error) {
@@ -142,8 +139,23 @@ func (c *DriveClient) GetURL(pickCode string) (string, error) {
 	return info.URL.URL, nil
 }
 
-func (c *DriveClient) Proxy(w http.ResponseWriter, r *http.Request) {
-	c.reserveProxy.ServeHTTP(w, r)
+func (c *DriveClient) Proxy(w http.ResponseWriter, req *http.Request, targetURL string) {
+	defer func() {
+		if err := recover(); err != nil {
+			if realErr, ok := err.(error); ok {
+				if errors.Is(realErr, http.ErrAbortHandler) {
+					return
+				}
+			}
+			logrus.Errorf("panic: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}()
+
+	u, _ := url.Parse(targetURL)
+	req.URL = u
+	req.Host = u.Host
+	c.reserveProxy.ServeHTTP(w, req)
 }
 
 func (c *DriveClient) ImportCredential(uid string, cid string, seid string) {
