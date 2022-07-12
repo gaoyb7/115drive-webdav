@@ -34,39 +34,9 @@ import (
 	ixml "github.com/gaoyb7/115drive-webdav/webdav/internal/xml"
 )
 
-// http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockinfo
-type lockInfo struct {
-	XMLName   ixml.Name `xml:"lockinfo"`
-	Exclusive *struct{} `xml:"lockscope>exclusive"`
-	Shared    *struct{} `xml:"lockscope>shared"`
-	Write     *struct{} `xml:"locktype>write"`
-	Owner     owner     `xml:"owner"`
-}
-
 // http://www.webdav.org/specs/rfc4918.html#ELEMENT_owner
 type owner struct {
 	InnerXML string `xml:",innerxml"`
-}
-
-func readLockInfo(r io.Reader) (li lockInfo, status int, err error) {
-	c := &countingReader{r: r}
-	if err = ixml.NewDecoder(c).Decode(&li); err != nil {
-		if err == io.EOF {
-			if c.n == 0 {
-				// An empty body means to refresh the lock.
-				// http://www.webdav.org/specs/rfc4918.html#refreshing-locks
-				return lockInfo{}, 0, nil
-			}
-			err = errInvalidLockInfo
-		}
-		return lockInfo{}, http.StatusBadRequest, err
-	}
-	// We only support exclusive (non-shared) write locks. In practice, these are
-	// the only types of locks that seem to matter.
-	if li.Exclusive == nil || li.Shared != nil || li.Write == nil {
-		return lockInfo{}, http.StatusNotImplemented, errUnsupportedLockInfo
-	}
-	return li, 0, nil
 }
 
 type countingReader struct {

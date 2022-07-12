@@ -19,10 +19,6 @@ import (
 )
 
 type Handler struct {
-	// ServerHost
-	ServerHost string
-	// ServerPort
-	ServerPort int
 	// Prefix is the URL path prefix to strip from WebDAV resource paths.
 	Prefix string
 	// DriveClient is 115 drive client.

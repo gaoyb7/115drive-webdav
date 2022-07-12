@@ -31,8 +31,6 @@ func main() {
 func startWebdavServer(host string, port int) {
 	prefix := "/dav"
 	webdavHandler := webdav.Handler{
-		ServerHost:  host,
-		ServerPort:  port,
 		Prefix:      prefix,
 		DriveClient: _115.Get115DriveClient(),
 		Logger: func(req *http.Request, err error) {
