@@ -63,19 +63,26 @@ type APIGetFilesResp struct {
 	Limit      int64       `json:"limit"`
 	MaxSize    int64       `json:"max_size"`
 	MinSize    int64       `json:"min_size"`
+	Offset     int64       `json:"offset"`
+	Order      string      `json:"order"`
+	PageSize   int64       `json:"page_size"`
+	Path       []FileInfo  `json:"path"`
+	State      bool        `json:"state"`
+	Suffix     string      `json:"suffix"`
 	// O          string      `json:"o"`
-	Offset   int64      `json:"offset"`
-	Order    string     `json:"order"`
-	PageSize int64      `json:"page_size"`
-	Path     []FileInfo `json:"path"`
-	// O          string      `json:"o"`
-	// RAll     int64      `json:"r_all"`
-	// Star     int64  `json:"star"`
-	State bool `json:"state"`
-	// Stdir    int64  `json:"stdir"`
-	Suffix string `json:"suffix"`
-	// SysCount int64  `json:"sys_count"`
-	// Type     int64  `json:"type"`
+	// RAll       int64       `json:"r_all"`
+	// Star       int64       `json:"star"`
+	// Stdir      int64       `json:"stdir"`
+	// SysCount   int64       `json:"sys_count"`
+	// Type       int64       `json:"type"`
+}
+
+type APIGetDirIDResp struct {
+	ErrNo      int64       `json:"errno"`
+	Error      string      `json:"error"`
+	CategoryID json.Number `json:"id"`
+	IsPrivate  json.Number `json:"is_private"`
+	State      bool        `json:"state"`
 }
 
 func (f *FileInfo) GetName() string {

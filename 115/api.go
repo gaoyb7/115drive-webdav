@@ -19,6 +19,7 @@ const (
 	APIURLGetFiles       = "https://webapi.115.com/files"
 	APIURLGetFileInfo    = "https://webapi.115.com/files/get_info"
 	APIURLGetDownloadURL = "https://proapi.115.com/app/chrome/downurl"
+	APIURLGetDirID       = "https://webapi.115.com/files/getid"
 
 	CookieDomain115   = ".115.com"
 	CookieDomainAnxia = ".anxia.com"
@@ -151,4 +152,38 @@ func APIGetDownloadURL(client *http.Client, pickCode string) (*DownloadInfo, err
 	}
 
 	return nil, nil
+}
+
+func APIGetDirID(client *http.Client, dir string) (*APIGetDirIDResp, error) {
+	if strings.HasPrefix(dir, "/") {
+		dir = dir[1:]
+	}
+
+	req, err := http.NewRequest(http.MethodGet, APIURLGetDirID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("api get dir id, call http.NewRequest fail, err: %w", err)
+	}
+
+	req.Header.Set("User-Agent", UserAgent)
+	q := req.URL.Query()
+	q.Add("path", dir)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("api get dir id, call client.Do fail, err: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("api get dir id, call ioutil.ReadAll fail, err: %w", err)
+	}
+
+	respData := APIGetDirIDResp{}
+	err = json.Unmarshal(body, &respData)
+	if err != nil {
+		return nil, fmt.Errorf("api get dir id, call json.Unmarshal fail, err: %w", err)
+	}
+	return &respData, nil
 }

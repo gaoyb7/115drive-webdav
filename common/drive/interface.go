@@ -14,7 +14,7 @@ type File interface {
 }
 
 type DriveClient interface {
-	GetFiles(filePath string) ([]File, error)
+	GetFiles(dir string) ([]File, error)
 	GetFile(filePath string) (File, error)
 	GetFileURL(file File) (string, error)
 	Proxy(w http.ResponseWriter, req *http.Request, fileURL string)

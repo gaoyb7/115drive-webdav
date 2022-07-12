@@ -56,48 +56,39 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 	defaultClient.ImportCredential(uid, cid, seid)
 }
 
-func (c *DriveClient) GetFiles(filePath string) ([]drive.File, error) {
-	filePath = slashClean(filePath)
-	cacheKey := fmt.Sprintf("files:%s", filePath)
+func (c *DriveClient) GetFiles(dir string) ([]drive.File, error) {
+	dir = slashClean(dir)
+	cacheKey := fmt.Sprintf("files:%s", dir)
 	if value, err := c.cache.Get(cacheKey); err == nil {
 		return value.([]drive.File), nil
 	}
 
-	cid := "0"
-	// TODO: get all pages
-	resp, err := APIGetFiles(c.HttpClient, cid, 1000, 0)
+	getDirIDResp, err := APIGetDirID(c.HttpClient, dir)
 	if err != nil {
 		return nil, err
 	}
-	paths := splitPath(filePath)
-	for idx := 0; idx < len(paths); idx++ {
-		found := false
-		for _, fileInfo := range resp.Data {
-			if fileInfo.Name == paths[idx] {
-				if !fileInfo.IsDir() {
-					logrus.Errorf("not dir")
-					return nil, common.ErrNotFound
-				}
-				found = true
-				cid = fileInfo.CategoryID.String()
-				break
-			}
-		}
-		if !found {
-			return nil, common.ErrNotFound
-		}
-		resp, err = APIGetFiles(c.HttpClient, cid, 1000, 0)
+	cid := getDirIDResp.CategoryID.String()
+
+	pageSize := int64(1000)
+	offset := int64(0)
+	files := make([]drive.File, 0)
+	for {
+		resp, err := APIGetFiles(c.HttpClient, cid, pageSize, offset)
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	files := make([]drive.File, 0, len(resp.Data))
-	for idx := range resp.Data {
-		files = append(files, &resp.Data[idx])
+		for idx := range resp.Data {
+			files = append(files, &resp.Data[idx])
+		}
+
+		offset = resp.Offset + pageSize
+		if offset >= resp.Count {
+			break
+		}
 	}
 	if err := c.cache.SetWithExpire(cacheKey, files, time.Minute*2); err != nil {
-		logrus.WithError(err).Errorf("call c.cache.SetWithExpire fail, file_path: %s", filePath)
+		logrus.WithError(err).Errorf("call c.cache.SetWithExpire fail, dir: %s", dir)
 	}
 
 	return files, nil
