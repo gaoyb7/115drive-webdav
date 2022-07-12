@@ -41,6 +41,7 @@ func startWebdavServer(host string, port int) {
 		webdavHandler.ServeHTTP(c.Writer, c.Request)
 	}
 
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	dav := r.Group("", gin.BasicAuth(gin.Accounts{
 		*cliUser: *cliPassword,
