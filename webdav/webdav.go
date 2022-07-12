@@ -69,7 +69,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(StatusText(status)))
 		}
 	}
-	if h.Logger != nil && err != nil {
+	if h.Logger != nil {
 		h.Logger(r, err)
 	}
 }

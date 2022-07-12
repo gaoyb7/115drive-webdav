@@ -203,12 +203,3 @@ func slashClean(name string) string {
 	}
 	return path.Clean(name)
 }
-
-func splitPath(name string) []string {
-	name = strings.Trim(name, "/")
-	if len(name) == 0 {
-		return nil
-	}
-
-	return strings.Split(name, "/")
-}

@@ -167,16 +167,8 @@ var liveProps = map[xml.Name]struct {
 // Each Propstat has a unique status and each property name will only be part
 // of one Propstat element.
 func props(ctx context.Context, fi drive.File, pnames []xml.Name) ([]Propstat, error) {
-	isDir := fi.IsDir()
-
 	var deadProps map[xml.Name]Property
-	// if dph, ok := f.(DeadPropsHolder); ok {
-	// 	deadProps, err = dph.DeadProps()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
+	isDir := fi.IsDir()
 	pstatOK := Propstat{Status: http.StatusOK}
 	pstatNotFound := Propstat{Status: http.StatusNotFound}
 	for _, pn := range pnames {
@@ -206,25 +198,8 @@ func props(ctx context.Context, fi drive.File, pnames []xml.Name) ([]Propstat, e
 
 // Propnames returns the property names defined for resource name.
 func propnames(ctx context.Context, fi drive.File) ([]xml.Name, error) {
-	// f, err := fs.OpenFile(ctx, name, os.O_RDONLY, 0)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer f.Close()
-	// fi, err := f.Stat()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	isDir := fi.IsDir()
-
 	var deadProps map[xml.Name]Property
-	// if dph, ok := f.(DeadPropsHolder); ok {
-	// 	deadProps, err = dph.DeadProps()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
+	isDir := fi.IsDir()
 	pnames := make([]xml.Name, 0, len(liveProps)+len(deadProps))
 	for pn, prop := range liveProps {
 		if prop.findFn != nil && (prop.dir || !isDir) {
@@ -328,33 +303,11 @@ type ContentTyper interface {
 }
 
 func findContentType(ctx context.Context, name string, fi drive.File) (string, error) {
-	// if do, ok := fi.(ContentTyper); ok {
-	// 	ctype, err := do.ContentType(ctx)
-	// 	if err != ErrNotImplemented {
-	// 		return ctype, err
-	// 	}
-	// }
-	// f, err := fs.OpenFile(ctx, name, os.O_RDONLY, 0)
-	// if err != nil {
-	// 	return "", err
-	// }
-	// defer f.Close()
-	// This implementation is based on serveContent's code in the standard net/http package.
 	ctype := mime.TypeByExtension(filepath.Ext(name))
 	if ctype != "" {
 		return ctype, nil
 	}
 	return "application/octet-stream", nil
-	// Read a chunk to decide between utf-8 text and binary.
-	// var buf [512]byte
-	// n, err := io.ReadFull(f, buf[:])
-	// if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-	// 	return "", err
-	// }
-	// ctype = http.DetectContentType(buf[:n])
-	// // Rewind file.
-	// _, err = f.Seek(0, os.SEEK_SET)
-	// return ctype, err
 }
 
 // ETager is an optional interface for the os.FileInfo objects
