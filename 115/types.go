@@ -85,6 +85,16 @@ type APIGetDirIDResp struct {
 	State      bool        `json:"state"`
 }
 
+type APILoginCheckResp struct {
+	ErrNo int64  `json:"errno"`
+	Error string `json:"error"`
+	Data  struct {
+		Expire json.Number `json:"expire"`
+		UserID json.Number `json:"user_id"`
+		Link   string      `json:"link"`
+	} `json:"data"`
+}
+
 func (f *FileInfo) GetName() string {
 	return f.Name
 }

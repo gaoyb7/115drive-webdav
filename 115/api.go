@@ -20,6 +20,7 @@ const (
 	APIURLGetFileInfo    = "https://webapi.115.com/files/get_info"
 	APIURLGetDownloadURL = "https://proapi.115.com/app/chrome/downurl"
 	APIURLGetDirID       = "https://webapi.115.com/files/getid"
+	APIURLLoginCheck     = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
 
 	CookieDomain115   = ".115.com"
 	CookieDomainAnxia = ".anxia.com"
@@ -186,4 +187,33 @@ func APIGetDirID(client *http.Client, dir string) (*APIGetDirIDResp, error) {
 		return nil, fmt.Errorf("api get dir id, call json.Unmarshal fail, err: %w", err)
 	}
 	return &respData, nil
+}
+
+func APILoginCheck(client *http.Client) (int64, error) {
+	req, err := http.NewRequest(http.MethodGet, APIURLLoginCheck, nil)
+	if err != nil {
+		return 0, fmt.Errorf("api login check, call http.NewRequest fail, err: %w", err)
+	}
+
+	req.Header.Set("User-Agent", UserAgent)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("api login check, call client.Do fail, err: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, fmt.Errorf("api login check, call ioutil.ReadAll fail, err: %w", err)
+	}
+
+	respData := APILoginCheckResp{}
+	err = json.Unmarshal(body, &respData)
+	if err != nil {
+		return 0, fmt.Errorf("api login check, call json.Unmarshal fail, err: %w", err)
+	}
+
+	userID, _ := respData.Data.UserID.Int64()
+	return userID, nil
 }

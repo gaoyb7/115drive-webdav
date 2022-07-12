@@ -52,8 +52,17 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 		},
 	}
 
-	// TODO: login check
 	defaultClient.ImportCredential(uid, cid, seid)
+
+	// login check
+	userID, err := APILoginCheck(defaultClient.HttpClient)
+	if err != nil {
+		panic(err)
+	}
+	if userID <= 0 {
+		panic("115 drive login fail")
+	}
+	logrus.Infof("115 drive login succ, user_id: %d", userID)
 }
 
 func (c *DriveClient) GetFiles(dir string) ([]drive.File, error) {
