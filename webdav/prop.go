@@ -13,9 +13,9 @@ import (
 	"mime"
 	"net/http"
 	"path/filepath"
-	"time"
+	"strconv"
 
-	_115 "github.com/gaoyb7/115drive-webdav/115"
+	"github.com/gaoyb7/115drive-webdav/common/drive"
 )
 
 // Proppatch describes a property update instruction as defined in RFC 4918.
@@ -103,7 +103,7 @@ type DeadPropsHolder interface {
 var liveProps = map[xml.Name]struct {
 	// findFn implements the propfind function of this property. If nil,
 	// it indicates a hidden property.
-	findFn func(context.Context, string, *_115.FileInfo) (string, error)
+	findFn func(context.Context, string, drive.File) (string, error)
 	// dir is true if the property applies to directories.
 	dir bool
 }{
@@ -166,7 +166,7 @@ var liveProps = map[xml.Name]struct {
 //
 // Each Propstat has a unique status and each property name will only be part
 // of one Propstat element.
-func props(ctx context.Context, fi *_115.FileInfo, pnames []xml.Name) ([]Propstat, error) {
+func props(ctx context.Context, fi drive.File, pnames []xml.Name) ([]Propstat, error) {
 	isDir := fi.IsDir()
 
 	var deadProps map[xml.Name]Property
@@ -205,7 +205,7 @@ func props(ctx context.Context, fi *_115.FileInfo, pnames []xml.Name) ([]Propsta
 }
 
 // Propnames returns the property names defined for resource name.
-func propnames(ctx context.Context, fi *_115.FileInfo) ([]xml.Name, error) {
+func propnames(ctx context.Context, fi drive.File) ([]xml.Name, error) {
 	// f, err := fs.OpenFile(ctx, name, os.O_RDONLY, 0)
 	// if err != nil {
 	// 	return nil, err
@@ -245,7 +245,7 @@ func propnames(ctx context.Context, fi *_115.FileInfo) ([]xml.Name, error) {
 // returned if they are named in 'include'.
 //
 // See http://www.webdav.org/specs/rfc4918.html#METHOD_PROPFIND
-func allprop(ctx context.Context, fi *_115.FileInfo, include []xml.Name) ([]Propstat, error) {
+func allprop(ctx context.Context, fi drive.File, include []xml.Name) ([]Propstat, error) {
 	pnames, err := propnames(ctx, fi)
 	if err != nil {
 		return nil, err
@@ -283,14 +283,14 @@ func escapeXML(s string) string {
 	return s
 }
 
-func findResourceType(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
+func findResourceType(ctx context.Context, name string, fi drive.File) (string, error) {
 	if fi.IsDir() {
 		return `<D:collection xmlns:D="DAV:"/>`, nil
 	}
 	return "", nil
 }
 
-func findDisplayName(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
+func findDisplayName(ctx context.Context, name string, fi drive.File) (string, error) {
 	if slashClean(name) == "/" {
 		// Hide the real name of a possibly prefixed root directory.
 		return "", nil
@@ -298,13 +298,12 @@ func findDisplayName(ctx context.Context, name string, fi *_115.FileInfo) (strin
 	return escapeXML(fi.GetName()), nil
 }
 
-func findContentLength(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
-	return fi.Size.String(), nil
+func findContentLength(ctx context.Context, name string, fi drive.File) (string, error) {
+	return strconv.FormatInt(fi.GetSize(), 10), nil
 }
 
-func findLastModified(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
-	t, _ := fi.UpdateTime.Int64()
-	return time.Unix(t, 0).UTC().Format(http.TimeFormat), nil
+func findLastModified(ctx context.Context, name string, fi drive.File) (string, error) {
+	return fi.GetUpdateTime().Format(http.TimeFormat), nil
 }
 
 // ErrNotImplemented should be returned by optional interfaces if they
@@ -328,7 +327,7 @@ type ContentTyper interface {
 	ContentType(ctx context.Context) (string, error)
 }
 
-func findContentType(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
+func findContentType(ctx context.Context, name string, fi drive.File) (string, error) {
 	// if do, ok := fi.(ContentTyper); ok {
 	// 	ctype, err := do.ContentType(ctx)
 	// 	if err != ErrNotImplemented {
@@ -376,16 +375,14 @@ type ETager interface {
 	ETag(ctx context.Context) (string, error)
 }
 
-func findETag(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
+func findETag(ctx context.Context, name string, fi drive.File) (string, error) {
 	// The Apache http 2.4 web server by default concatenates the
 	// modification time and size of a file. We replicate the heuristic
 	// with nanosecond granularity.
-	updateTime, _ := fi.UpdateTime.Int64()
-	size, _ := fi.Size.Int64()
-	return fmt.Sprintf(`"%x%x"`, time.Unix(updateTime, 0).UnixNano(), size), nil
+	return fmt.Sprintf(`"%x%x"`, fi.GetUpdateTime().UnixNano(), fi.GetSize()), nil
 }
 
-func findSupportedLock(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
+func findSupportedLock(ctx context.Context, name string, fi drive.File) (string, error) {
 	return `` +
 		`<D:lockentry xmlns:D="DAV:">` +
 		`<D:lockscope><D:exclusive/></D:lockscope>` +

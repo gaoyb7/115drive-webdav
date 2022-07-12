@@ -1,6 +1,9 @@
 package _115
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type DownloadURL struct {
 	URL    string      `json:"url"`
@@ -39,16 +42,6 @@ type FileInfo struct {
 
 	CreateTime json.Number `json:"tp"`
 	UpdateTime json.Number `json:"te"`
-
-	// IsStar json.Number `json:"m"`
-	// Labels []*LabelInfo `json:"fl"`
-
-	// MediaDuration describes duration in seconds for audio / video.
-	// MediaDuration float64 `json:"play_long"`
-
-	// Special fields for video
-	// IsVideo         int `json:"iv"`
-	// VideoDefinition int `json:"vdi"`
 }
 
 type APIGetFileInfoResp struct {
@@ -85,11 +78,26 @@ type APIGetFilesResp struct {
 	// Type     int64  `json:"type"`
 }
 
+func (f *FileInfo) GetName() string {
+	return f.Name
+}
+
+func (f *FileInfo) GetSize() int64 {
+	size, _ := f.Size.Int64()
+	return size
+}
+
+func (f *FileInfo) GetUpdateTime() time.Time {
+	updateTime, _ := f.UpdateTime.Int64()
+	return time.Unix(updateTime, 0).UTC()
+}
+
+func (f *FileInfo) GetCreateTime() time.Time {
+	updateTime, _ := f.UpdateTime.Int64()
+	return time.Unix(updateTime, 0).UTC()
+}
+
 func (f *FileInfo) IsDir() bool {
 	fid, _ := f.FileID.Int64()
 	return fid == 0
-}
-
-func (f *FileInfo) GetName() string {
-	return f.Name
 }

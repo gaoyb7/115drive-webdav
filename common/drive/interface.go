@@ -7,7 +7,6 @@ import (
 
 type File interface {
 	GetName() string
-	GetURL() string
 	GetSize() int64
 	GetUpdateTime() time.Time
 	GetCreateTime() time.Time
@@ -15,8 +14,8 @@ type File interface {
 }
 
 type DriveClient interface {
-	GetFiles(path string) ([]File, error)
-	GetFile(path string) (File, error)
+	GetFiles(filePath string) ([]File, error)
+	GetFile(filePath string) (File, error)
 	GetFileURL(file File) (string, error)
 	Proxy(w http.ResponseWriter, req *http.Request, fileURL string)
 }

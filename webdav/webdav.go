@@ -13,8 +13,8 @@ import (
 	"path"
 	"strings"
 
-	_115 "github.com/gaoyb7/115drive-webdav/115"
 	"github.com/gaoyb7/115drive-webdav/common"
+	"github.com/gaoyb7/115drive-webdav/common/drive"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,7 +22,7 @@ type Handler struct {
 	// Prefix is the URL path prefix to strip from WebDAV resource paths.
 	Prefix string
 	// DriveClient is 115 drive client.
-	DriveClient *_115.DriveClient
+	DriveClient drive.DriveClient
 	// Logger is an optional error logger. If non-nil, it will be called
 	// for all HTTP requests.
 	Logger func(*http.Request, error)
@@ -122,9 +122,9 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		return http.StatusInternalServerError, err
 	}
 
-	fileURL, err := h.DriveClient.GetURL(fi.PickCode)
+	fileURL, err := h.DriveClient.GetFileURL(fi)
 	if err != nil {
-		logrus.WithError(err).Errorf("handleGetHeadPost, call h.DriveClient.GetURL fail, pick_code: %s", fi.PickCode)
+		logrus.WithError(err).Errorf("handleGetHeadPost, call h.DriveClient.GetURL fail")
 		return http.StatusInternalServerError, err
 	}
 	w.Header().Set("ETag", etag)
@@ -161,7 +161,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 
 	mw := multistatusWriter{w: w}
 
-	walkFn := func(reqPath string, info *_115.FileInfo, err error) error {
+	walkFn := func(reqPath string, info drive.File, err error) error {
 		if err != nil {
 			return err
 		}
@@ -191,7 +191,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 		return mw.write(makePropstatResponse(href, pstats))
 	}
 
-	walkErr := walkFS(ctx, depth, reqPath, fi, walkFn)
+	walkErr := walkFS(ctx, depth, reqPath, h.DriveClient, fi, walkFn)
 	closeErr := mw.close()
 	if walkErr != nil {
 		return http.StatusInternalServerError, walkErr

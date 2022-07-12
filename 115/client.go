@@ -7,13 +7,13 @@ import (
 	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
-	neturl "net/url"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/bluele/gcache"
 	"github.com/gaoyb7/115drive-webdav/common"
+	"github.com/gaoyb7/115drive-webdav/common/drive"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,7 +28,7 @@ type DriveClient struct {
 	reserveProxy *httputil.ReverseProxy
 }
 
-func Get115DriveClient() *DriveClient {
+func Get115DriveClient() drive.DriveClient {
 	return defaultClient
 }
 
@@ -56,11 +56,11 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 	defaultClient.ImportCredential(uid, cid, seid)
 }
 
-func (c *DriveClient) GetFiles(path string) ([]FileInfo, error) {
-	path = slashClean(path)
-	cacheKey := fmt.Sprintf("files:%s", path)
+func (c *DriveClient) GetFiles(filePath string) ([]drive.File, error) {
+	filePath = slashClean(filePath)
+	cacheKey := fmt.Sprintf("files:%s", filePath)
 	if value, err := c.cache.Get(cacheKey); err == nil {
-		return value.([]FileInfo), nil
+		return value.([]drive.File), nil
 	}
 
 	cid := "0"
@@ -69,7 +69,7 @@ func (c *DriveClient) GetFiles(path string) ([]FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	paths := splitPath(path)
+	paths := splitPath(filePath)
 	for idx := 0; idx < len(paths); idx++ {
 		found := false
 		for _, fileInfo := range resp.Data {
@@ -92,14 +92,18 @@ func (c *DriveClient) GetFiles(path string) ([]FileInfo, error) {
 		}
 	}
 
-	if err := c.cache.SetWithExpire(cacheKey, resp.Data, time.Minute*2); err != nil {
-		logrus.WithError(err).Errorf("call c.cache.SetWithExpire fail, path: %s", path)
+	files := make([]drive.File, 0, len(resp.Data))
+	for idx := range resp.Data {
+		files = append(files, &resp.Data[idx])
+	}
+	if err := c.cache.SetWithExpire(cacheKey, files, time.Minute*2); err != nil {
+		logrus.WithError(err).Errorf("call c.cache.SetWithExpire fail, file_path: %s", filePath)
 	}
 
-	return resp.Data, nil
+	return files, nil
 }
 
-func (c *DriveClient) GetFile(filePath string) (*FileInfo, error) {
+func (c *DriveClient) GetFile(filePath string) (drive.File, error) {
 	filePath = slashClean(filePath)
 	if filePath == "/" || len(filePath) == 0 {
 		return &FileInfo{CategoryID: "0"}, nil
@@ -112,16 +116,17 @@ func (c *DriveClient) GetFile(filePath string) (*FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, fileInfo := range files {
-		if fileInfo.Name == fileName {
-			return &fileInfo, nil
+	for _, file := range files {
+		if file.GetName() == fileName {
+			return file, nil
 		}
 	}
 
 	return nil, common.ErrNotFound
 }
 
-func (c *DriveClient) GetURL(pickCode string) (string, error) {
+func (c *DriveClient) GetFileURL(file drive.File) (string, error) {
+	pickCode := file.(*FileInfo).PickCode
 	cacheKey := fmt.Sprintf("url:%s", pickCode)
 	if value, err := c.cache.Get(cacheKey); err == nil {
 		return value.(string), nil
@@ -169,7 +174,7 @@ func (c *DriveClient) ImportCredential(uid string, cid string, seid string) {
 }
 
 func (c *DriveClient) importCookies(domain string, path string, cookies map[string]string) {
-	url := &neturl.URL{
+	url := &url.URL{
 		Scheme: "https",
 		Path:   "/",
 	}
