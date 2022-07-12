@@ -12,8 +12,6 @@ import (
 )
 
 var (
-	webdavHandler webdav.Handler
-
 	cliUid      = flag.String("uid", "", "115 cookie uid")
 	cliCid      = flag.String("cid", "", "115 cookie cid")
 	cliSeid     = flag.String("seid", "", "115 cookie seid")
@@ -32,7 +30,7 @@ func main() {
 
 func startWebdavServer(host string, port int) {
 	prefix := "/dav"
-	webdavHandler = webdav.Handler{
+	webdavHandler := webdav.Handler{
 		ServerHost:  host,
 		ServerPort:  port,
 		Prefix:      prefix,
@@ -44,26 +42,25 @@ func startWebdavServer(host string, port int) {
 			}
 		},
 	}
+	webdavHandleFunc := func(c *gin.Context) {
+		webdavHandler.ServeHTTP(c.Writer, c.Request)
+	}
 
 	r := gin.Default()
 	dav := r.Group(prefix, gin.BasicAuth(gin.Accounts{
 		*cliUser: *cliPassword,
 	}))
-	dav.Any("", webdavHandle)
-	dav.Any("/*path", webdavHandle)
-	dav.Handle("PROPFIND", "/*path", webdavHandle)
-	dav.Handle("MKCOL", "/*path", webdavHandle)
-	dav.Handle("LOCK", "/*path", webdavHandle)
-	dav.Handle("UNLOCK", "/*path", webdavHandle)
-	dav.Handle("PROPPATCH", "/*path", webdavHandle)
-	dav.Handle("COPY", "/*path", webdavHandle)
-	dav.Handle("MOVE", "/*path", webdavHandle)
+	dav.Any("", webdavHandleFunc)
+	dav.Any("/*path", webdavHandleFunc)
+	dav.Handle("PROPFIND", "/*path", webdavHandleFunc)
+	dav.Handle("MKCOL", "/*path", webdavHandleFunc)
+	dav.Handle("LOCK", "/*path", webdavHandleFunc)
+	dav.Handle("UNLOCK", "/*path", webdavHandleFunc)
+	dav.Handle("PROPPATCH", "/*path", webdavHandleFunc)
+	dav.Handle("COPY", "/*path", webdavHandleFunc)
+	dav.Handle("MOVE", "/*path", webdavHandleFunc)
 
 	if err := r.Run(fmt.Sprintf("%s:%d", host, port)); err != nil {
 		logrus.Panic(err)
 	}
-}
-
-func webdavHandle(c *gin.Context) {
-	webdavHandler.ServeHTTP(c.Writer, c.Request)
 }
