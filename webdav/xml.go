@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	// As of https://go-review.googlesource.com/#/c/12772/ which was submitted
 	// in July 2015, this package uses an internal fork of the standard
@@ -79,26 +78,6 @@ func (c *countingReader) Read(p []byte) (int, error) {
 	n, err := c.r.Read(p)
 	c.n += n
 	return n, err
-}
-
-func writeLockInfo(w io.Writer, token string, ld LockDetails) (int, error) {
-	depth := "infinity"
-	if ld.ZeroDepth {
-		depth = "0"
-	}
-	timeout := ld.Duration / time.Second
-	return fmt.Fprintf(w, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"+
-		"<D:prop xmlns:D=\"DAV:\"><D:lockdiscovery><D:activelock>\n"+
-		"	<D:locktype><D:write/></D:locktype>\n"+
-		"	<D:lockscope><D:exclusive/></D:lockscope>\n"+
-		"	<D:depth>%s</D:depth>\n"+
-		"	<D:owner>%s</D:owner>\n"+
-		"	<D:timeout>Second-%d</D:timeout>\n"+
-		"	<D:locktoken><D:href>%s</D:href></D:locktoken>\n"+
-		"	<D:lockroot><D:href>%s</D:href></D:lockroot>\n"+
-		"</D:activelock></D:lockdiscovery></D:prop>",
-		depth, ld.OwnerXML, timeout, escape(token), escape(ld.Root),
-	)
 }
 
 func escape(s string) string {

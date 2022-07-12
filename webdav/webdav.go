@@ -25,8 +25,6 @@ type Handler struct {
 	ServerPort int
 	// Prefix is the URL path prefix to strip from WebDAV resource paths.
 	Prefix string
-	// LockSystem is the lock management system.
-	LockSystem LockSystem
 	// DriveClient is 115 drive client.
 	DriveClient *_115.DriveClient
 	// Logger is an optional error logger. If non-nil, it will be called
@@ -46,31 +44,27 @@ func (h *Handler) stripPrefix(p string) (string, int, error) {
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	status, err := http.StatusBadRequest, errUnsupportedMethod
-	if h.LockSystem == nil {
-		status, err = http.StatusInternalServerError, errNoLockSystem
-	} else {
-		switch r.Method {
-		case "OPTIONS":
-			status, err = h.handleOptions(w, r)
-		case "GET", "HEAD", "POST":
-			status, err = h.handleGetHeadPost(w, r)
-		case "DELETE":
-			status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
-		case "PUT":
-			status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
-		case "MKCOL":
-			status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
-		case "COPY", "MOVE":
-			status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
-		case "LOCK":
-			status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
-		case "UNLOCK":
-			status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
-		case "PROPFIND":
-			status, err = h.handlePropfind(w, r)
-		case "PROPPATCH":
-			status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
-		}
+	switch r.Method {
+	case "OPTIONS":
+		status, err = h.handleOptions(w, r)
+	case "GET", "HEAD", "POST":
+		status, err = h.handleGetHeadPost(w, r)
+	case "DELETE":
+		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
+	case "PUT":
+		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
+	case "MKCOL":
+		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
+	case "COPY", "MOVE":
+		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
+	case "LOCK":
+		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
+	case "UNLOCK":
+		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
+	case "PROPFIND":
+		status, err = h.handlePropfind(w, r)
+	case "PROPPATCH":
+		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
 	}
 
 	if status != 0 {
@@ -127,7 +121,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		return http.StatusMethodNotAllowed, nil
 	}
 
-	etag, err := findETag(r.Context(), h.LockSystem, reqPath, fi)
+	etag, err := findETag(r.Context(), reqPath, fi)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -177,7 +171,7 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 		}
 		var pstats []Propstat
 		if pf.Propname != nil {
-			pnames, err := propnames(ctx, h.LockSystem, info)
+			pnames, err := propnames(ctx, info)
 			if err != nil {
 				return err
 			}
@@ -187,9 +181,9 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 			}
 			pstats = append(pstats, pstat)
 		} else if pf.Allprop != nil {
-			pstats, err = allprop(ctx, h.LockSystem, info, pf.Prop)
+			pstats, err = allprop(ctx, info, pf.Prop)
 		} else {
-			pstats, err = props(ctx, h.LockSystem, info, pf.Prop)
+			pstats, err = props(ctx, info, pf.Prop)
 		}
 		if err != nil {
 			return err

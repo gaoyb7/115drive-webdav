@@ -34,7 +34,6 @@ func startWebdavServer(host string, port int) {
 		ServerHost:  host,
 		ServerPort:  port,
 		Prefix:      prefix,
-		LockSystem:  webdav.NewMemLS(),
 		DriveClient: _115.Get115DriveClient(),
 		Logger: func(req *http.Request, err error) {
 			if err != nil {

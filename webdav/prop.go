@@ -103,7 +103,7 @@ type DeadPropsHolder interface {
 var liveProps = map[xml.Name]struct {
 	// findFn implements the propfind function of this property. If nil,
 	// it indicates a hidden property.
-	findFn func(context.Context, LockSystem, string, *_115.FileInfo) (string, error)
+	findFn func(context.Context, string, *_115.FileInfo) (string, error)
 	// dir is true if the property applies to directories.
 	dir bool
 }{
@@ -166,16 +166,7 @@ var liveProps = map[xml.Name]struct {
 //
 // Each Propstat has a unique status and each property name will only be part
 // of one Propstat element.
-func props(ctx context.Context, ls LockSystem, fi *_115.FileInfo, pnames []xml.Name) ([]Propstat, error) {
-	// f, err := fs.OpenFile(ctx, name, os.O_RDONLY, 0)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer f.Close()
-	// fi, err := f.Stat()
-	// if err != nil {
-	// 	return nil, err
-	// }
+func props(ctx context.Context, fi *_115.FileInfo, pnames []xml.Name) ([]Propstat, error) {
 	isDir := fi.IsDir()
 
 	var deadProps map[xml.Name]Property
@@ -196,7 +187,7 @@ func props(ctx context.Context, ls LockSystem, fi *_115.FileInfo, pnames []xml.N
 		}
 		// Otherwise, it must either be a live property or we don't know it.
 		if prop := liveProps[pn]; prop.findFn != nil && (prop.dir || !isDir) {
-			innerXML, err := prop.findFn(ctx, ls, fi.GetName(), fi)
+			innerXML, err := prop.findFn(ctx, fi.GetName(), fi)
 			if err != nil {
 				return nil, err
 			}
@@ -214,7 +205,7 @@ func props(ctx context.Context, ls LockSystem, fi *_115.FileInfo, pnames []xml.N
 }
 
 // Propnames returns the property names defined for resource name.
-func propnames(ctx context.Context, ls LockSystem, fi *_115.FileInfo) ([]xml.Name, error) {
+func propnames(ctx context.Context, fi *_115.FileInfo) ([]xml.Name, error) {
 	// f, err := fs.OpenFile(ctx, name, os.O_RDONLY, 0)
 	// if err != nil {
 	// 	return nil, err
@@ -254,8 +245,8 @@ func propnames(ctx context.Context, ls LockSystem, fi *_115.FileInfo) ([]xml.Nam
 // returned if they are named in 'include'.
 //
 // See http://www.webdav.org/specs/rfc4918.html#METHOD_PROPFIND
-func allprop(ctx context.Context, ls LockSystem, fi *_115.FileInfo, include []xml.Name) ([]Propstat, error) {
-	pnames, err := propnames(ctx, ls, fi)
+func allprop(ctx context.Context, fi *_115.FileInfo, include []xml.Name) ([]Propstat, error) {
+	pnames, err := propnames(ctx, fi)
 	if err != nil {
 		return nil, err
 	}
@@ -269,72 +260,7 @@ func allprop(ctx context.Context, ls LockSystem, fi *_115.FileInfo, include []xm
 			pnames = append(pnames, pn)
 		}
 	}
-	return props(ctx, ls, fi, pnames)
-}
-
-// Patch patches the properties of resource name. The return values are
-// constrained in the same manner as DeadPropsHolder.Patch.
-func patch(ctx context.Context, ls LockSystem, name string, patches []Proppatch) ([]Propstat, error) {
-	conflict := false
-loop:
-	for _, patch := range patches {
-		for _, p := range patch.Props {
-			if _, ok := liveProps[p.XMLName]; ok {
-				conflict = true
-				break loop
-			}
-		}
-	}
-	if conflict {
-		pstatForbidden := Propstat{
-			Status:   http.StatusForbidden,
-			XMLError: `<D:cannot-modify-protected-property xmlns:D="DAV:"/>`,
-		}
-		pstatFailedDep := Propstat{
-			Status: StatusFailedDependency,
-		}
-		for _, patch := range patches {
-			for _, p := range patch.Props {
-				if _, ok := liveProps[p.XMLName]; ok {
-					pstatForbidden.Props = append(pstatForbidden.Props, Property{XMLName: p.XMLName})
-				} else {
-					pstatFailedDep.Props = append(pstatFailedDep.Props, Property{XMLName: p.XMLName})
-				}
-			}
-		}
-		return makePropstats(pstatForbidden, pstatFailedDep), nil
-	}
-
-	// f, err := fs.OpenFile(ctx, name, os.O_RDWR, 0)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer f.Close()
-	// if dph, ok := f.(DeadPropsHolder); ok {
-	// 	ret, err := dph.Patch(patches)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	// http://www.webdav.org/specs/rfc4918.html#ELEMENT_propstat says that
-	// 	// "The contents of the prop XML element must only list the names of
-	// 	// properties to which the result in the status element applies."
-	// 	for _, pstat := range ret {
-	// 		for i, p := range pstat.Props {
-	// 			pstat.Props[i] = Property{XMLName: p.XMLName}
-	// 		}
-	// 	}
-	// 	return ret, nil
-	// }
-
-	// The file doesn't implement the optional DeadPropsHolder interface, so
-	// all patches are forbidden.
-	pstat := Propstat{Status: http.StatusForbidden}
-	for _, patch := range patches {
-		for _, p := range patch.Props {
-			pstat.Props = append(pstat.Props, Property{XMLName: p.XMLName})
-		}
-	}
-	return []Propstat{pstat}, nil
+	return props(ctx, fi, pnames)
 }
 
 func escapeXML(s string) string {
@@ -357,14 +283,14 @@ func escapeXML(s string) string {
 	return s
 }
 
-func findResourceType(ctx context.Context, ls LockSystem, name string, fi *_115.FileInfo) (string, error) {
+func findResourceType(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
 	if fi.IsDir() {
 		return `<D:collection xmlns:D="DAV:"/>`, nil
 	}
 	return "", nil
 }
 
-func findDisplayName(ctx context.Context, ls LockSystem, name string, fi *_115.FileInfo) (string, error) {
+func findDisplayName(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
 	if slashClean(name) == "/" {
 		// Hide the real name of a possibly prefixed root directory.
 		return "", nil
@@ -372,11 +298,11 @@ func findDisplayName(ctx context.Context, ls LockSystem, name string, fi *_115.F
 	return escapeXML(fi.GetName()), nil
 }
 
-func findContentLength(ctx context.Context, ls LockSystem, name string, fi *_115.FileInfo) (string, error) {
+func findContentLength(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
 	return fi.Size.String(), nil
 }
 
-func findLastModified(ctx context.Context, ls LockSystem, name string, fi *_115.FileInfo) (string, error) {
+func findLastModified(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
 	t, _ := fi.UpdateTime.Int64()
 	return time.Unix(t, 0).UTC().Format(http.TimeFormat), nil
 }
@@ -402,7 +328,7 @@ type ContentTyper interface {
 	ContentType(ctx context.Context) (string, error)
 }
 
-func findContentType(ctx context.Context, ls LockSystem, name string, fi *_115.FileInfo) (string, error) {
+func findContentType(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
 	// if do, ok := fi.(ContentTyper); ok {
 	// 	ctype, err := do.ContentType(ctx)
 	// 	if err != ErrNotImplemented {
@@ -450,7 +376,7 @@ type ETager interface {
 	ETag(ctx context.Context) (string, error)
 }
 
-func findETag(ctx context.Context, ls LockSystem, name string, fi *_115.FileInfo) (string, error) {
+func findETag(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
 	// The Apache http 2.4 web server by default concatenates the
 	// modification time and size of a file. We replicate the heuristic
 	// with nanosecond granularity.
@@ -459,7 +385,7 @@ func findETag(ctx context.Context, ls LockSystem, name string, fi *_115.FileInfo
 	return fmt.Sprintf(`"%x%x"`, time.Unix(updateTime, 0).UnixNano(), size), nil
 }
 
-func findSupportedLock(ctx context.Context, ls LockSystem, name string, fi *_115.FileInfo) (string, error) {
+func findSupportedLock(ctx context.Context, name string, fi *_115.FileInfo) (string, error) {
 	return `` +
 		`<D:lockentry xmlns:D="DAV:">` +
 		`<D:lockscope><D:exclusive/></D:lockscope>` +
