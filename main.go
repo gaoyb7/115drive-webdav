@@ -29,9 +29,7 @@ func main() {
 }
 
 func startWebdavServer(host string, port int) {
-	prefix := "/dav"
 	webdavHandler := webdav.Handler{
-		Prefix:      prefix,
 		DriveClient: _115.Get115DriveClient(),
 		Logger: func(req *http.Request, err error) {
 			if err != nil {
@@ -44,10 +42,9 @@ func startWebdavServer(host string, port int) {
 	}
 
 	r := gin.Default()
-	dav := r.Group(prefix, gin.BasicAuth(gin.Accounts{
+	dav := r.Group("", gin.BasicAuth(gin.Accounts{
 		*cliUser: *cliPassword,
 	}))
-	dav.Any("", webdavHandleFunc)
 	dav.Any("/*path", webdavHandleFunc)
 	dav.Handle("PROPFIND", "/*path", webdavHandleFunc)
 	dav.Handle("MKCOL", "/*path", webdavHandleFunc)
