@@ -44,15 +44,6 @@ func walkFS(ctx context.Context, depth int, name string, fs drive.DriveClient, f
 	}
 
 	// Read directory names.
-	// f, err := fs.OpenFile(ctx, name, os.O_RDONLY, 0)
-	// if err != nil {
-	// 	return walkFn(name, info, err)
-	// }
-	// fileInfos, err := f.Readdir(0)
-	// f.Close()
-	// if err != nil {
-	// 	return walkFn(name, info, err)
-	// }
 	files, err := fs.GetFiles(name)
 	if err != nil {
 		logrus.WithError(err).Errorf("call client.GetFiles fail, name: %s", name)
@@ -61,18 +52,10 @@ func walkFS(ctx context.Context, depth int, name string, fs drive.DriveClient, f
 
 	for _, file := range files {
 		filename := path.Join(name, file.GetName())
+		err := walkFS(ctx, depth, filename, fs, file, walkFn)
 		if err != nil {
-			logrus.WithError(err).Errorf("call client.GetFile fail, file_name: %s", filename)
-			return err
-			// if err := walkFn(filename, fileInfo, err); err != nil && err != filepath.SkipDir {
-			// 	return err
-			// }
-		} else {
-			err = walkFS(ctx, depth, filename, fs, file, walkFn)
-			if err != nil {
-				if !file.IsDir() || err != filepath.SkipDir {
-					return err
-				}
+			if !file.IsDir() || err != filepath.SkipDir {
+				return err
 			}
 		}
 	}
