@@ -7,7 +7,7 @@
 # linux
 go build
 
-# openwrt arm64
+# linux arm64
 GOOS=linux GOARCH=arm64 go build
 ```
 
