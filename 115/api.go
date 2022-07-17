@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36 115Browser/7.1.0"
+	UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36 115Browser/23.9.3"
 
 	APIURLGetFiles       = "https://webapi.115.com/files"
 	APIURLGetFileInfo    = "https://webapi.115.com/files/get_info"
