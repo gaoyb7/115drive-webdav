@@ -11,4 +11,5 @@ require (
 	github.com/stretchr/testify v1.7.2 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/sys v0.0.0-20220702020025-31831981b65f // indirect
+	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9
 )

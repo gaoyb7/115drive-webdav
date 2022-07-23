@@ -1,6 +1,7 @@
 package _115
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/gaoyb7/115drive-webdav/common"
 	"github.com/gaoyb7/115drive-webdav/common/drive"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 )
 
 var (
@@ -26,6 +28,7 @@ type DriveClient struct {
 	cookieJar    *cookiejar.Jar
 	cache        gcache.Cache
 	reserveProxy *httputil.ReverseProxy
+	limiter      *rate.Limiter
 }
 
 func Get115DriveClient() drive.DriveClient {
@@ -42,6 +45,7 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 		HttpClient: &http.Client{Jar: cookieJar},
 		cookieJar:  cookieJar,
 		cache:      gcache.New(10000).LFU().Build(),
+		limiter:    rate.NewLimiter(5, 10),
 	}
 	defaultClient.reserveProxy = &httputil.ReverseProxy{
 		Transport: defaultClient.HttpClient.Transport,
@@ -72,6 +76,7 @@ func (c *DriveClient) GetFiles(dir string) ([]drive.File, error) {
 		return value.([]drive.File), nil
 	}
 
+	c.limiter.Wait(context.Background())
 	getDirIDResp, err := APIGetDirID(c.HttpClient, dir)
 	if err != nil {
 		return nil, err

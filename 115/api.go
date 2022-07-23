@@ -61,7 +61,7 @@ func APIGetFiles(client *http.Client, cid string, pageSize int64, offset int64) 
 	respData := APIGetFilesResp{}
 	err = json.Unmarshal(body, &respData)
 	if err != nil {
-		return nil, fmt.Errorf("api get files, call json.Unmarshal fail, err: %w", err)
+		return nil, fmt.Errorf("api get files, call json.Unmarshal fail, body: %s", string(body))
 	}
 	return &respData, nil
 }
@@ -91,7 +91,7 @@ func APIGetFileInfo(client *http.Client, fid string) (*APIGetFileInfoResp, error
 	respData := APIGetFileInfoResp{}
 	err = json.Unmarshal(body, &respData)
 	if err != nil {
-		return nil, fmt.Errorf("api get file info, call json.Unmarshal fail, err: %w", err)
+		return nil, fmt.Errorf("api get file info, call json.Unmarshal fail, body: %s", string(body))
 	}
 	return &respData, err
 }
@@ -127,12 +127,12 @@ func APIGetDownloadURL(client *http.Client, pickCode string) (*DownloadInfo, err
 	respData := APIBaseResp{}
 	err = json.Unmarshal(body, &respData)
 	if err != nil {
-		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, err: %w", err)
+		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(body))
 	}
 
 	var resultData string
 	if err = json.Unmarshal(respData.Data, &resultData); err != nil {
-		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, err: %w", err)
+		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(respData.Data))
 	}
 
 	data2, err := Decode(resultData, key)
@@ -141,7 +141,7 @@ func APIGetDownloadURL(client *http.Client, pickCode string) (*DownloadInfo, err
 	}
 	result := DownloadData{}
 	if err := json.Unmarshal(data2, &result); err != nil {
-		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, err: %w", err)
+		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(data2))
 	}
 
 	for _, info := range result {
@@ -184,7 +184,7 @@ func APIGetDirID(client *http.Client, dir string) (*APIGetDirIDResp, error) {
 	respData := APIGetDirIDResp{}
 	err = json.Unmarshal(body, &respData)
 	if err != nil {
-		return nil, fmt.Errorf("api get dir id, call json.Unmarshal fail, err: %w", err)
+		return nil, fmt.Errorf("api get dir id, call json.Unmarshal fail, body: %s", string(body))
 	}
 	return &respData, nil
 }
@@ -211,7 +211,7 @@ func APILoginCheck(client *http.Client) (int64, error) {
 	respData := APILoginCheckResp{}
 	err = json.Unmarshal(body, &respData)
 	if err != nil {
-		return 0, fmt.Errorf("api login check, call json.Unmarshal fail, err: %w", err)
+		return 0, fmt.Errorf("api login check, call json.Unmarshal fail, body: %s", string(body))
 	}
 
 	userID, _ := respData.Data.UserID.Int64()
