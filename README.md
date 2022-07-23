@@ -8,13 +8,7 @@ https://github.com/gaoyb7/115drive-webdav/releases
 ## 运行
 需要获取 115 网盘 Cookie 信息，包括 UID、CID、SEID，建议抓包 App 请求获取，iOS 系统可使用 [Stream](https://apps.apple.com/cn/app/stream/id1312141691) 抓包
 ```bash
-./115drive-webdav --host=0.0.0.0 \
-    --port=8080 \
-    --user=user \
-    --pwd=123456 \
-    --uid=xxxxxx \
-    --cid=xxxxxxx \
-    --seid=xxxxx
+./115drive-webdav --host=0.0.0.0 --port=8080 --user=user --pwd=123456 --uid=xxxxxx --cid=xxxxxxx --seid=xxxxx
 ```
 
 ## 参数说明
