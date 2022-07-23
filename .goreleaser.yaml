@@ -9,10 +9,33 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w
     goos:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - 386
+      - arm
+      - arm64
+      - mips
+      - mipsle
+      - mips64
+      - mips64le
+    goarm:
+      - 5
+      - 6
+      - 7
+    gomips:
+      - hardfloat
+      - softfloat
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
 archives:
   - replacements:
       darwin: Darwin
