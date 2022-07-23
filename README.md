@@ -2,14 +2,8 @@
 
 115 网盘 WebDav 服务，可配合支持 WebDAV 协议的客户端 App 食用，如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 
 
-## 编译
-```bash
-# linux
-go build
-
-# linux arm64
-GOOS=linux GOARCH=arm64 go build
-```
+## 下载
+https://github.com/gaoyb7/115drive-webdav/releases
 
 ## 运行
 需要获取 115 网盘 Cookie 信息，包括 UID、CID、SEID，建议抓包 App 请求获取，iOS 系统可使用 [Stream](https://apps.apple.com/cn/app/stream/id1312141691) 抓包
