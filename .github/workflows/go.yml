@@ -2,12 +2,15 @@ name: Go
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "main"
+    tags:
+      - "*"
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - "main"
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -23,3 +26,12 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v3
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        version: latest
+        args: release --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
