@@ -85,6 +85,24 @@ type APIDeleteFileResp struct {
 	State bool   `json:"state"`
 }
 
+type APICopyFileResp struct {
+	// ErrNo json.Number `json:"errno"`
+	Error string `json:"error"`
+	State bool   `json:"state"`
+}
+
+type APIMoveFileResp struct {
+	// ErrNo json.Number `json:"errno"`
+	Error string `json:"error"`
+	State bool   `json:"state"`
+}
+
+type APIRenameFileResp struct {
+	// ErrNo json.Number `json:"errno"`
+	Error string `json:"error"`
+	State bool   `json:"state"`
+}
+
 type APILoginCheckResp struct {
 	ErrNo json.Number `json:"errno"`
 	Error string      `json:"error"`

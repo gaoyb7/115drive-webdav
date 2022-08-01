@@ -54,8 +54,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
 	case "MKCOL":
 		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
-	case "COPY", "MOVE":
-		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
+	case "MOVE":
+		status, err = h.handleMove(w, r)
 	case "LOCK":
 		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
 	case "UNLOCK":
@@ -87,10 +87,10 @@ func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request) (status 
 	if fi, err := h.DriveClient.GetFile(reqPath); err == nil {
 		if fi.IsDir() {
 			// allow = "OPTIONS, LOCK, DELETE, PROPPATCH, COPY, MOVE, UNLOCK, PROPFIND"
-			allow = "OPTIONS, PROPFIND"
+			allow = "OPTIONS, DELETE, MOVE, PROPFIND"
 		} else {
 			// allow = "OPTIONS, LOCK, GET, HEAD, POST, DELETE, PROPPATCH, COPY, MOVE, UNLOCK, PROPFIND, PUT"
-			allow = "OPTIONS, GET, HEAD, POST, PROPFIND"
+			allow = "OPTIONS, GET, HEAD, POST, DELETE, MOVE, PROPFIND"
 		}
 	} else {
 		if !errors.Is(err, common.ErrNotFound) {
@@ -158,6 +158,59 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status i
 		return http.StatusMethodNotAllowed, err
 	}
 	return http.StatusNoContent, nil
+}
+
+func (h *Handler) handleMove(w http.ResponseWriter, r *http.Request) (status int, err error) {
+	hdr := r.Header.Get("Destination")
+	if hdr == "" {
+		return http.StatusBadRequest, errInvalidDestination
+	}
+	u, err := url.Parse(hdr)
+	if err != nil {
+		return http.StatusBadRequest, errInvalidDestination
+	}
+	if u.Host != "" && u.Host != r.Host {
+		return http.StatusBadGateway, errInvalidDestination
+	}
+
+	src, status, err := h.stripPrefix(r.URL.Path)
+	if err != nil {
+		return status, err
+	}
+
+	dst, status, err := h.stripPrefix(u.Path)
+	if err != nil {
+		return status, err
+	}
+
+	if dst == "" {
+		return http.StatusBadGateway, errInvalidDestination
+	}
+	if dst == src {
+		return http.StatusForbidden, errDestinationEqualsSource
+	}
+
+	release, status, err := h.confirmLocks(r, src, dst)
+	if err != nil {
+		return status, err
+	}
+	defer release()
+
+	// Section 9.9.2 says that "The MOVE method on a collection must act as if
+	// a "Depth: infinity" header was used on it. A client must not submit a
+	// Depth header on a MOVE on a collection with any value but "infinity"."
+	if hdr := r.Header.Get("Depth"); hdr != "" {
+		if parseDepth(hdr) != infiniteDepth {
+			return http.StatusBadRequest, errInvalidDepth
+		}
+	}
+	err = h.DriveClient.MoveFile(src, dst)
+	if err != nil {
+		logrus.WithError(err).Errorf("call h.DriveClient.MoveFile fail, src: %s, dst: %s", src, dst)
+		return http.StatusInternalServerError, err
+	}
+	return http.StatusNoContent, nil
+
 }
 
 func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status int, err error) {

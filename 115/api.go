@@ -21,6 +21,8 @@ const (
 	APIURLGetDownloadURL = "https://proapi.115.com/app/chrome/downurl"
 	APIURLGetDirID       = "https://webapi.115.com/files/getid"
 	APIURLDeleteFile     = "https://webapi.115.com/rb/delete"
+	APIURLMoveFile       = "https://webapi.115.com/files/move"
+	APIURLRenameFile     = "https://webapi.115.com/files/batch_rename"
 	APIURLLoginCheck     = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
 
 	CookieDomain115   = ".115.com"
@@ -222,6 +224,72 @@ func APIDeleteFile(client *http.Client, fid string, pid string) (*APIDeleteFileR
 	}
 
 	return &respData, nil
+}
+
+func APIMoveFile(client *http.Client, fid string, pid string) (*APIMoveFileResp, error) {
+	form := url.Values{}
+	form.Set("fid[0]", fid)
+	form.Set("pid", pid)
+	data := strings.NewReader(form.Encode())
+	req, err := http.NewRequest(http.MethodPost, APIURLMoveFile, data)
+	if err != nil {
+		return nil, fmt.Errorf("api move file, call http.NewRequest fail, err: %w", err)
+	}
+
+	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.ContentLength = data.Size()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("api move file, call client.Do fail, err: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("api move file, call ioutil.ReadAll fail, err: %w", err)
+	}
+
+	respData := APIMoveFileResp{}
+	err = json.Unmarshal(body, &respData)
+	if err != nil {
+		return nil, fmt.Errorf("api move file, call json.Unmarshal fail, body: %s", string(body))
+	}
+
+	return &respData, nil
+}
+
+func APIRenameFile(client *http.Client, fid string, name string) (*APIRenameFileResp, error) {
+	form := url.Values{}
+	form.Set(fmt.Sprintf("files_new_name[%s]", fid), name)
+	data := strings.NewReader(form.Encode())
+	req, err := http.NewRequest(http.MethodPost, APIURLRenameFile, data)
+	if err != nil {
+		return nil, fmt.Errorf("api rename file, call http.NewRequest fail, err: %w", err)
+	}
+
+	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.ContentLength = data.Size()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("api rename file, call client.Do fail, err: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("api rename file, call ioutil.ReadAll fail, err: %w", err)
+	}
+
+	respData := APIRenameFileResp{}
+	err = json.Unmarshal(body, &respData)
+	if err != nil {
+		return nil, fmt.Errorf("api rename file, call json.Unmarshal fail, body: %s", string(body))
+	}
+
+	return &respData, nil
+
 }
 
 func APILoginCheck(client *http.Client) (int64, error) {

@@ -151,7 +151,14 @@ func (c *DriveClient) GetFileURL(file drive.File) (string, error) {
 
 func (c *DriveClient) RemoveFile(filePath string) error {
 	fi, err := c.GetFile(filePath)
+	if err != nil {
+		return err
+	}
 	fid := fi.(*FileInfo).FileID.String()
+	if fi.IsDir() {
+		fid = fi.(*FileInfo).CategoryID.String()
+	}
+
 	pid := fi.(*FileInfo).ParentID.String()
 	if err != nil {
 		return err
@@ -169,7 +176,73 @@ func (c *DriveClient) RemoveFile(filePath string) error {
 	filePath = slashClean(filePath)
 	filePath = strings.TrimRight(filePath, "/")
 	dir, _ := path.Split(filePath)
-	c.cache.Remove(fmt.Sprintf("files:%s", dir))
+	c.flushDir(dir)
+
+	return nil
+}
+
+func (c *DriveClient) MoveFile(srcPath string, dstPath string) error {
+	logrus.Infof("move file, src: %s, dst: %s", srcPath, dstPath)
+
+	fi, err := c.GetFile(srcPath)
+	if err != nil {
+		return err
+	}
+	fid := fi.(*FileInfo).FileID.String()
+	if fi.IsDir() {
+		fid = fi.(*FileInfo).CategoryID.String()
+	}
+
+	srcPath = slashClean(srcPath)
+	if srcPath == "/" || len(srcPath) == 0 {
+		logrus.Warnf("invalid src_path: %s", srcPath)
+		return nil
+	}
+	srcPath = strings.TrimRight(srcPath, "/")
+	srcDir, srcFileName := path.Split(srcPath)
+
+	dstPath = slashClean(dstPath)
+	if dstPath == "/" || len(dstPath) == 0 {
+		logrus.Warnf("invalid src_path: %s", srcPath)
+		return nil
+	}
+	dstPath = strings.TrimRight(dstPath, "/")
+	dstDir, dstFileName := path.Split(dstPath)
+
+	dstDirFi, err := c.GetFile(dstDir)
+	if err != nil {
+		return err
+	}
+	if !dstDirFi.IsDir() {
+		logrus.Errorf("dst dir not exists")
+		return nil
+	}
+
+	if srcDir == dstDir {
+		resp, err := APIRenameFile(c.HttpClient, fid, dstFileName)
+		if err != nil {
+			return err
+		}
+		if !resp.State {
+			return fmt.Errorf("rename file fail, state is false")
+		}
+		c.flushDir(srcDir)
+	} else {
+		if srcFileName == dstFileName {
+			resp, err := APIMoveFile(c.HttpClient, fid, dstDirFi.(*FileInfo).CategoryID.String())
+			if err != nil {
+				return err
+			}
+			if !resp.State {
+				return fmt.Errorf("move file fail, state is false")
+			}
+			c.flushDir(srcDir)
+			c.flushDir(dstDir)
+		} else {
+			logrus.Errorf("invalid dst filename")
+			return nil
+		}
+	}
 
 	return nil
 }
@@ -201,6 +274,15 @@ func (c *DriveClient) ImportCredential(uid string, cid string, seid string) {
 	}
 	c.importCookies(CookieDomain115, "/", cookies)
 	c.importCookies(CookieDomainAnxia, "/", cookies)
+}
+
+func (c *DriveClient) flushDir(dir string) {
+	dir = slashClean(dir)
+	dir = strings.TrimRight(dir, "/")
+	if len(dir) == 0 {
+		dir = "/"
+	}
+	c.cache.Remove(fmt.Sprintf("files:%s", dir))
 }
 
 func (c *DriveClient) importCookies(domain string, path string, cookies map[string]string) {
