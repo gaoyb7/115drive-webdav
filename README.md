@@ -36,6 +36,6 @@ https://github.com/gaoyb7/115drive-webdav/releases
 - [x] WebDav 权限校验
 - [x] WebDav 在线视频播放
 - [ ] 文件上传
-- [ ] 文件重命名
-- [ ] 文件删除
-- [ ] 文件移动
+- [x] 文件重命名
+- [x] 文件删除
+- [x] 文件移动
