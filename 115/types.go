@@ -69,25 +69,25 @@ type APIGetFilesResp struct {
 	Path       []FileInfo  `json:"path"`
 	State      bool        `json:"state"`
 	Suffix     string      `json:"suffix"`
-	// O          string      `json:"o"`
-	// RAll       int64       `json:"r_all"`
-	// Star       int64       `json:"star"`
-	// Stdir      int64       `json:"stdir"`
-	// SysCount   int64       `json:"sys_count"`
-	// Type       int64       `json:"type"`
 }
 
 type APIGetDirIDResp struct {
-	ErrNo      int64       `json:"errno"`
+	ErrNo      json.Number `json:"errno"`
 	Error      string      `json:"error"`
 	CategoryID json.Number `json:"id"`
 	IsPrivate  json.Number `json:"is_private"`
 	State      bool        `json:"state"`
 }
 
-type APILoginCheckResp struct {
-	ErrNo int64  `json:"errno"`
+type APIDeleteFileResp struct {
+	// ErrNo json.Number `json:"errno"`
 	Error string `json:"error"`
+	State bool   `json:"state"`
+}
+
+type APILoginCheckResp struct {
+	ErrNo json.Number `json:"errno"`
+	Error string      `json:"error"`
 	Data  struct {
 		Expire json.Number `json:"expire"`
 		UserID json.Number `json:"user_id"`

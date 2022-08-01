@@ -31,6 +31,7 @@ func main() {
 func startWebdavServer(host string, port int) {
 	webdavHandler := webdav.Handler{
 		DriveClient: _115.Get115DriveClient(),
+		LockSystem:  webdav.NewMemLS(),
 		Logger: func(req *http.Request, err error) {
 			if err != nil {
 				logrus.WithField("method", req.Method).WithField("path", req.URL.Path).Errorf("err: %v", err)

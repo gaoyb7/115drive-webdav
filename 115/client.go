@@ -149,6 +149,31 @@ func (c *DriveClient) GetFileURL(file drive.File) (string, error) {
 	return info.URL.URL, nil
 }
 
+func (c *DriveClient) RemoveFile(filePath string) error {
+	fi, err := c.GetFile(filePath)
+	fid := fi.(*FileInfo).FileID.String()
+	pid := fi.(*FileInfo).ParentID.String()
+	if err != nil {
+		return err
+	}
+
+	resp, err := APIDeleteFile(c.HttpClient, fid, pid)
+	if err != nil {
+		return err
+	}
+
+	if !resp.State {
+		return fmt.Errorf("remove file fail, state is false")
+	}
+
+	filePath = slashClean(filePath)
+	filePath = strings.TrimRight(filePath, "/")
+	dir, _ := path.Split(filePath)
+	c.cache.Remove(fmt.Sprintf("files:%s", dir))
+
+	return nil
+}
+
 func (c *DriveClient) Proxy(w http.ResponseWriter, req *http.Request, targetURL string) {
 	defer func() {
 		if err := recover(); err != nil {

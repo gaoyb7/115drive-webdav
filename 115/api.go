@@ -20,6 +20,7 @@ const (
 	APIURLGetFileInfo    = "https://webapi.115.com/files/get_info"
 	APIURLGetDownloadURL = "https://proapi.115.com/app/chrome/downurl"
 	APIURLGetDirID       = "https://webapi.115.com/files/getid"
+	APIURLDeleteFile     = "https://webapi.115.com/rb/delete"
 	APIURLLoginCheck     = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
 
 	CookieDomain115   = ".115.com"
@@ -186,6 +187,40 @@ func APIGetDirID(client *http.Client, dir string) (*APIGetDirIDResp, error) {
 	if err != nil {
 		return nil, fmt.Errorf("api get dir id, call json.Unmarshal fail, body: %s", string(body))
 	}
+	return &respData, nil
+}
+
+func APIDeleteFile(client *http.Client, fid string, pid string) (*APIDeleteFileResp, error) {
+	form := url.Values{}
+	form.Set("fid[0]", fid)
+	form.Set("pid", pid)
+	form.Set("ignore_warn", "1")
+	data := strings.NewReader(form.Encode())
+	req, err := http.NewRequest(http.MethodPost, APIURLDeleteFile, data)
+	if err != nil {
+		return nil, fmt.Errorf("api delete file, call http.NewRequest fail, err: %w", err)
+	}
+
+	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.ContentLength = data.Size()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("api delete file, call client.Do fail, err: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("api delete file, call ioutil.ReadAll fail, err: %w", err)
+	}
+
+	respData := APIDeleteFileResp{}
+	err = json.Unmarshal(body, &respData)
+	if err != nil {
+		return nil, fmt.Errorf("api delete file, call json.Unmarshal fail, body: %s", string(body))
+	}
+
 	return &respData, nil
 }
 

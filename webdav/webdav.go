@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/gaoyb7/115drive-webdav/common"
 	"github.com/gaoyb7/115drive-webdav/common/drive"
@@ -23,6 +24,8 @@ type Handler struct {
 	Prefix string
 	// DriveClient is 115 drive client.
 	DriveClient drive.DriveClient
+	// LockSystem is the lock management system.
+	LockSystem LockSystem
 	// Logger is an optional error logger. If non-nil, it will be called
 	// for all HTTP requests.
 	Logger func(*http.Request, error)
@@ -46,7 +49,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "GET", "HEAD", "POST":
 		status, err = h.handleGetHeadPost(w, r)
 	case "DELETE":
-		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
+		status, err = h.handleDelete(w, r)
 	case "PUT":
 		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
 	case "MKCOL":
@@ -132,6 +135,31 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	return 0, nil
 }
 
+func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status int, err error) {
+	reqPath, status, err := h.stripPrefix(r.URL.Path)
+	if err != nil {
+		return status, err
+	}
+	release, status, err := h.confirmLocks(r, reqPath, "")
+	if err != nil {
+		return status, err
+	}
+	defer release()
+
+	// TODO: return MultiStatus where appropriate.
+
+	// "godoc os RemoveAll" says that "If the path does not exist, RemoveAll
+	// returns nil (no error)." WebDAV semantics are that it should return a
+	// "404 Not Found". We therefore have to Stat before we RemoveAll.
+	if err := h.DriveClient.RemoveFile(reqPath); err != nil {
+		if errors.Is(err, common.ErrNotFound) {
+			return http.StatusNotFound, err
+		}
+		return http.StatusMethodNotAllowed, err
+	}
+	return http.StatusNoContent, nil
+}
+
 func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
@@ -200,6 +228,94 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 		return http.StatusInternalServerError, closeErr
 	}
 	return 0, nil
+}
+
+func (h *Handler) lock(now time.Time, root string) (token string, status int, err error) {
+	token, err = h.LockSystem.Create(now, LockDetails{
+		Root:      root,
+		Duration:  infiniteTimeout,
+		ZeroDepth: true,
+	})
+	if err != nil {
+		if err == ErrLocked {
+			return "", StatusLocked, err
+		}
+		return "", http.StatusInternalServerError, err
+	}
+	return token, 0, nil
+}
+
+func (h *Handler) confirmLocks(r *http.Request, src, dst string) (release func(), status int, err error) {
+	hdr := r.Header.Get("If")
+	if hdr == "" {
+		// An empty If header means that the client hasn't previously created locks.
+		// Even if this client doesn't care about locks, we still need to check that
+		// the resources aren't locked by another client, so we create temporary
+		// locks that would conflict with another client's locks. These temporary
+		// locks are unlocked at the end of the HTTP request.
+		now, srcToken, dstToken := time.Now(), "", ""
+		if src != "" {
+			srcToken, status, err = h.lock(now, src)
+			if err != nil {
+				return nil, status, err
+			}
+		}
+		if dst != "" {
+			dstToken, status, err = h.lock(now, dst)
+			if err != nil {
+				if srcToken != "" {
+					h.LockSystem.Unlock(now, srcToken)
+				}
+				return nil, status, err
+			}
+		}
+
+		return func() {
+			if dstToken != "" {
+				h.LockSystem.Unlock(now, dstToken)
+			}
+			if srcToken != "" {
+				h.LockSystem.Unlock(now, srcToken)
+			}
+		}, 0, nil
+	}
+
+	ih, ok := parseIfHeader(hdr)
+	if !ok {
+		return nil, http.StatusBadRequest, errInvalidIfHeader
+	}
+	// ih is a disjunction (OR) of ifLists, so any ifList will do.
+	for _, l := range ih.lists {
+		lsrc := l.resourceTag
+		if lsrc == "" {
+			lsrc = src
+		} else {
+			u, err := url.Parse(lsrc)
+			if err != nil {
+				continue
+			}
+			if u.Host != r.Host {
+				continue
+			}
+			lsrc, status, err = h.stripPrefix(u.Path)
+			if err != nil {
+				return nil, status, err
+			}
+		}
+		release, err = h.LockSystem.Confirm(time.Now(), lsrc, dst, l.conditions...)
+		if err == ErrConfirmationFailed {
+			continue
+		}
+		if err != nil {
+			return nil, http.StatusInternalServerError, err
+		}
+		return release, 0, nil
+	}
+	// Section 10.4.1 says that "If this header is evaluated and all state lists
+	// fail, then the request must fail with a 412 (Precondition Failed) status."
+	// We follow the spec even though the cond_put_corrupt_token test case from
+	// the litmus test warns on seeing a 412 instead of a 423 (Locked).
+	return nil, http.StatusPreconditionFailed, ErrLocked
 }
 
 func makePropstatResponse(href string, pstats []Propstat) *response {
