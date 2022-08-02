@@ -12,10 +12,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var (
+	cfg = config.Config
+)
+
 func main() {
 	logrus.SetReportCaller(true)
-	_115.MustInit115DriveClient(config.Config.Uid, config.Config.Cid, config.Config.Seid)
-	startWebdavServer(config.Config.Host, config.Config.Port)
+	_115.MustInit115DriveClient(cfg.Uid, cfg.Cid, cfg.Seid)
+	startWebdavServer(cfg.Host, cfg.Port)
 }
 
 func startWebdavServer(host string, port int) {
@@ -35,7 +39,7 @@ func startWebdavServer(host string, port int) {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	dav := r.Group("", gin.BasicAuth(gin.Accounts{
-		config.Config.User: config.Config.Password,
+		cfg.User: cfg.Password,
 	}))
 	dav.Any("/*path", webdavHandleFunc)
 	dav.Handle("PROPFIND", "/*path", webdavHandleFunc)
