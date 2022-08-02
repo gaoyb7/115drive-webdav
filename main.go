@@ -1,31 +1,21 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 
 	_115 "github.com/gaoyb7/115drive-webdav/115"
 	"github.com/gaoyb7/115drive-webdav/webdav"
+
+	"github.com/gaoyb7/115drive-webdav/common/config"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
-var (
-	cliUid      = flag.String("uid", "", "115 cookie uid")
-	cliCid      = flag.String("cid", "", "115 cookie cid")
-	cliSeid     = flag.String("seid", "", "115 cookie seid")
-	cliHost     = flag.String("host", "0.0.0.0", "webdav server host")
-	cliPort     = flag.Int("port", 8080, "webdav server port")
-	cliUser     = flag.String("user", "user", "webdav auth username")
-	cliPassword = flag.String("pwd", "123456", "webdav auth password")
-)
-
 func main() {
-	flag.Parse()
 	logrus.SetReportCaller(true)
-	_115.MustInit115DriveClient(*cliUid, *cliCid, *cliSeid)
-	startWebdavServer(*cliHost, *cliPort)
+	_115.MustInit115DriveClient(config.Config.Uid, config.Config.Cid, config.Config.Seid)
+	startWebdavServer(config.Config.Host, config.Config.Port)
 }
 
 func startWebdavServer(host string, port int) {
@@ -45,7 +35,7 @@ func startWebdavServer(host string, port int) {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	dav := r.Group("", gin.BasicAuth(gin.Accounts{
-		*cliUser: *cliPassword,
+		config.Config.User: config.Config.Password,
 	}))
 	dav.Any("/*path", webdavHandleFunc)
 	dav.Handle("PROPFIND", "/*path", webdavHandleFunc)
