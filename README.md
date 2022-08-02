@@ -27,6 +27,8 @@ https://github.com/gaoyb7/115drive-webdav/releases
     115 网盘 Cookie，CID
 --seid
     115 网盘 Cookie，SEID
+--config
+    从文件中读取配置，参考 config.json.example
 ```
 
 ## 功能支持
