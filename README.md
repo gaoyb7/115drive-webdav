@@ -11,6 +11,16 @@ https://github.com/gaoyb7/115drive-webdav/releases
 ./115drive-webdav --host=0.0.0.0 --port=8080 --user=user --pwd=123456 --uid=xxxxxx --cid=xxxxxxx --seid=xxxxx
 ```
 
+## Docker 运行
+```bash
+docker run -d -p 8081:8081 gaoyb7/115drive-webdav \
+	--host=0.0.0.0 --port=8081 \
+	--user=user --pwd=123456 \
+	--uid=xxxxxx \
+	--cid=xxxxxx \
+	--seid=xxxxxx
+```
+
 ## 参数说明
 ```bash
 --host
