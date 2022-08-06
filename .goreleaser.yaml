@@ -45,6 +45,9 @@ archives:
       amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
+dockers:
+  - image_templates:
+    - gaoyb7/115drive-webdav
 snapshot:
   name_template: "{{ incpatch .Version }}"
 changelog:
