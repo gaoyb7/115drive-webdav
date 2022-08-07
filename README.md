@@ -13,7 +13,7 @@ https://github.com/gaoyb7/115drive-webdav/releases
 
 ## Docker 运行
 ```bash
-docker run -d -p 8081:8081 gaoyb7/115drive-webdav:0.1.3 \
+docker run -d -p 8081:8081 gaoyb7/115drive-webdav \
 	--host=0.0.0.0 --port=8081 \
 	--user=user --pwd=123456 \
 	--uid=xxxxxx \
