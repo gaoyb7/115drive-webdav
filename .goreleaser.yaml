@@ -63,6 +63,10 @@ docker_manifests:
   image_templates:
   - gaoyb7/115drive-webdav:{{ .Version }}-amd64
   - gaoyb7/115drive-webdav:{{ .Version }}-arm64v8
+- name_template: gaoyb7/115drive-webdav:latest
+  image_templates:
+  - gaoyb7/115drive-webdav:{{ .Version }}-amd64
+  - gaoyb7/115drive-webdav:{{ .Version }}-arm64v8
 snapshot:
   name_template: "{{ incpatch .Version }}"
 changelog:
