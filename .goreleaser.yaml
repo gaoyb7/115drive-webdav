@@ -46,7 +46,27 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 dockers:
-  - image_templates:
+  - goos: linux
+    goarch: amd64
+    image_templates:
+    - gaoyb7/115drive-webdav
+  - goos: linux
+    goarch: 386
+    image_templates:
+    - gaoyb7/115drive-webdav
+  - goos: linux
+    goarch: arm64
+    image_templates:
+    - gaoyb7/115drive-webdav
+  - goos: linux
+    goarch: arm
+    goarm: 6
+    image_templates:
+    - gaoyb7/115drive-webdav
+  - goos: linux
+    goarch: arm
+    goarm: 7
+    image_templates:
     - gaoyb7/115drive-webdav
 snapshot:
   name_template: "{{ incpatch .Version }}"
