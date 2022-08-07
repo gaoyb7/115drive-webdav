@@ -47,32 +47,22 @@ checksum:
   name_template: 'checksums.txt'
 dockers:
   - use: buildx
-    goos: linux
     goarch: amd64
+    build_flag_templates:
+    - "--platform=linux/amd64"
     image_templates:
-    - gaoyb7/115drive-webdav
+    - "gaoyb7/115drive-webdav:{{ .Version }}-amd64"
   - use: buildx
-    goos: linux
-    goarch: 386
-    image_templates:
-    - gaoyb7/115drive-webdav
-  - use: buildx
-    goos: linux
     goarch: arm64
+    build_flag_templates:
+    - "--platform=linux/arm64/v8"
     image_templates:
-    - gaoyb7/115drive-webdav
-  - use: buildx
-    goos: linux
-    goarch: arm
-    goarm: 6
-    image_templates:
-    - gaoyb7/115drive-webdav
-  - use: buildx
-    goos: linux
-    goarch: arm
-    goarm: 7
-    image_templates:
-    - gaoyb7/115drive-webdav
+    - "gaoyb7/115drive-webdav:{{ .Version }}-arm64v8"
+docker_manifests:
+- name_template: gaoyb7/115drive-webdav:{{ .Version }}
+  image_templates:
+  - gaoyb7/115drive-webdav:{{ .Version }}-amd64
+  - gaoyb7/115drive-webdav:{{ .Version }}-arm64v8
 snapshot:
   name_template: "{{ incpatch .Version }}"
 changelog:
