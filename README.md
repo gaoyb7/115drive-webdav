@@ -1,9 +1,9 @@
 # 115drive-webdav
 
-[![Release](https://img.shields.io/github/v/release/gaoyb7/115drive-webdav.svg)](https://github.com/gaoyb7/115drive-webdav/releases)
+[![Release](https://img.shields.io/github/v/release/gaoyb7/115drive-webdav?display_name=tag)](https://github.com/gaoyb7/115drive-webdav/releases)
 [![Downloads](https://img.shields.io/github/downloads/gaoyb7/115drive-webdav/total)](https://github.com/gaoyb7/115drive-webdav/releases)
-[![GitHub Actions](https://github.com/gaoyb7/115drive-webdav/workflows/CI/badge.svg)](https://github.com/gaoyb7/115drive-webdav/actions)
-[![Docker Image](https://img.shields.io/docker/pulls/gaoyb7/115drive-webdav.svg?maxAge=2592000)](https://hub.docker.com/r/gaoyb7/115drive-webdav)
+[![GitHub Actions](https://img.shields.io/github/workflow/status/gaoyb7/115drive-webdav/CI)](https://github.com/gaoyb7/115drive-webdav/actions)
+[![Docker Image](https://img.shields.io/docker/pulls/gaoyb7/115drive-webdav)](https://hub.docker.com/r/gaoyb7/115drive-webdav)
 
 115 网盘 WebDav 服务，可配合支持 WebDAV 协议的客户端 App 食用，如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 
 
