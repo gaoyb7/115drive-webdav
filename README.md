@@ -1,5 +1,6 @@
 # 115drive-webdav
 
+[![Release](https://img.shields.io/github/v/release/gaoyb7/115drive-webdav.svg)](https://github.com/gaoyb7/115drive-webdav/releases)
 [![GitHub Actions](https://github.com/gaoyb7/115drive-webdav/workflows/CI/badge.svg)](https://github.com/gaoyb7/115drive-webdav/actions)
 [![Docker Image](https://img.shields.io/docker/pulls/gaoyb7/115drive-webdav.svg?maxAge=2592000)](https://hub.docker.com/r/gaoyb7/115drive-webdav)
 
