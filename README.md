@@ -61,7 +61,9 @@ docker run -d -p 8081:8081 gaoyb7/115drive-webdav \
 ### iOS
 * 安装 [Stream](https://apps.apple.com/cn/app/stream/id1312141691)
 
-* 打开 Stream，开始抓包
+* 打开 Stream，根据提示设置 HTTPS 抓包，安装证书
+
+* 点击开始抓包
 
 * 切换到 115 App，点开一个视频，开始播放
 
