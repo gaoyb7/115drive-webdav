@@ -56,3 +56,18 @@ docker run -d -p 8081:8081 gaoyb7/115drive-webdav \
 - [x] 文件重命名
 - [x] 文件删除
 - [x] 文件移动
+
+## App Cookie 获取方法
+### iOS
+* 安装 [Stream](https://apps.apple.com/cn/app/stream/id1312141691)
+
+* 打开 Stream，开始抓包
+
+* 切换到 115 App，点开一个视频，开始播放
+
+* 再次切换回 Stream，停止抓包，在抓包历史中，找到 115 相关的域名请求，获取到 Cookie 信息
+
+<img src="https://user-images.githubusercontent.com/9281603/183956374-f3eb563b-3c04-4285-a0e8-af3eda13e42a.png" width="50%">
+
+### Android
+TODO
