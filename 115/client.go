@@ -181,8 +181,13 @@ func (c *DriveClient) RemoveFile(filePath string) error {
 	return nil
 }
 
-func (c *DriveClient) NewDir(filePath string) error {
-	ret := strings.Split(filePath, "/")
+func (c *DriveClient) NewDir(dir string) error {
+	getDirIDResp, err := APIGetDirID(c.HttpClient, dir)
+	if err == nil {
+		return nil
+	}
+
+	ret := strings.Split(dir, "/")
 	var path, cname string
 	for i := 0; i < len(ret); i++ {
 		if i+1 >= len(ret) {
@@ -192,7 +197,7 @@ func (c *DriveClient) NewDir(filePath string) error {
 		}
 	}
 
-	getDirIDResp, err := APIGetDirID(c.HttpClient, path)
+	getDirIDResp, err = APIGetDirID(c.HttpClient, path)
 	if err != nil {
 		return err
 	}
