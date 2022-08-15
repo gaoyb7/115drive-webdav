@@ -137,6 +137,7 @@ func (c *DriveClient) GetFileURL(file drive.File) (string, error) {
 		return value.(string), nil
 	}
 
+	c.limiter.Wait(context.Background())
 	info, err := APIGetDownloadURL(c.HttpClient, pickCode)
 	if err != nil {
 		return "", err
@@ -150,6 +151,7 @@ func (c *DriveClient) GetFileURL(file drive.File) (string, error) {
 }
 
 func (c *DriveClient) RemoveFile(filePath string) error {
+	c.limiter.Wait(context.Background())
 	fi, err := c.GetFile(filePath)
 	if err != nil {
 		return err
@@ -220,6 +222,7 @@ func (c *DriveClient) NewDir(dir string) error {
 func (c *DriveClient) MoveFile(srcPath string, dstPath string) error {
 	logrus.Infof("move file, src: %s, dst: %s", srcPath, dstPath)
 
+	c.limiter.Wait(context.Background())
 	fi, err := c.GetFile(srcPath)
 	if err != nil {
 		return err
