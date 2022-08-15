@@ -183,35 +183,32 @@ func (c *DriveClient) RemoveFile(filePath string) error {
 
 func (c *DriveClient) NewDir(dir string) error {
 	getDirIDResp, err := APIGetDirID(c.HttpClient, dir)
-	if err == nil && getDirIDResp.CategoryID.String() != "0" {
+	if err != nil {
+		return err
+	}
+	cid, _ := getDirIDResp.CategoryID.Int64()
+	if cid != 0 {
+		logrus.WithField("dir", dir).Infof("dir exists, ignore")
 		return nil
 	}
 
-	ret := strings.Split(dir, "/")
-	var path, cname string
-	for i := 0; i < len(ret); i++ {
-		if i+1 >= len(ret) {
-			cname = ret[i]
-		} else {
-			path += fmt.Sprintf("%s/", ret[i])
-		}
-	}
-
-	getDirIDResp, err = APIGetDirID(c.HttpClient, path)
+	dir = slashClean(dir)
+	parentDir, dirName := path.Split(dir)
+	getDirIDResp, err = APIGetDirID(c.HttpClient, parentDir)
 	if err != nil {
 		return err
 	}
+
 	pid := getDirIDResp.CategoryID.String()
-	resp, err := APINewDir(c.HttpClient, pid, cname)
+	resp, err := APINewDir(c.HttpClient, pid, dirName)
 	if err != nil {
 		return err
 	}
-
 	if !resp.State {
 		return fmt.Errorf("new dir fail, state is false")
 	}
 
-	c.flushDir(path)
+	c.flushDir(parentDir)
 
 	return nil
 }

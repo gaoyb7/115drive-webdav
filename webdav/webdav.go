@@ -53,7 +53,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "PUT":
 		status, err = http.StatusMethodNotAllowed, errUnsupportedMethod
 	case "MKCOL":
-		status, err = h.handleNewDir(w, r)
+		status, err = h.handleMkcol(w, r)
 	case "MOVE":
 		status, err = h.handleMove(w, r)
 	case "LOCK":
@@ -160,7 +160,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status i
 	return http.StatusNoContent, nil
 }
 
-func (h *Handler) handleNewDir(w http.ResponseWriter, r *http.Request) (status int, err error) {
+func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
 		return status, err
@@ -171,11 +171,9 @@ func (h *Handler) handleNewDir(w http.ResponseWriter, r *http.Request) (status i
 	}
 	defer release()
 
-	// TODO: return MultiStatus where appropriate.
-
-	// "godoc os RemoveAll" says that "If the path does not exist, RemoveAll
-	// returns nil (no error)." WebDAV semantics are that it should return a
-	// "404 Not Found". We therefore have to Stat before we RemoveAll.
+	if r.ContentLength > 0 {
+		return http.StatusUnsupportedMediaType, nil
+	}
 	if err := h.DriveClient.NewDir(reqPath); err != nil {
 		if errors.Is(err, common.ErrNotFound) {
 			return http.StatusNotFound, err
