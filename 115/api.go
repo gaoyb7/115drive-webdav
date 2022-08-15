@@ -21,6 +21,7 @@ const (
 	APIURLGetDownloadURL = "https://proapi.115.com/app/chrome/downurl"
 	APIURLGetDirID       = "https://webapi.115.com/files/getid"
 	APIURLDeleteFile     = "https://webapi.115.com/rb/delete"
+	APIURLNewDir         = "https://webapi.115.com/files/add"
 	APIURLMoveFile       = "https://webapi.115.com/files/move"
 	APIURLRenameFile     = "https://webapi.115.com/files/batch_rename"
 	APIURLLoginCheck     = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
@@ -221,6 +222,39 @@ func APIDeleteFile(client *http.Client, fid string, pid string) (*APIDeleteFileR
 	err = json.Unmarshal(body, &respData)
 	if err != nil {
 		return nil, fmt.Errorf("api delete file, call json.Unmarshal fail, body: %s", string(body))
+	}
+
+	return &respData, nil
+}
+
+func APINewDir(client *http.Client, pid string, cname string) (*APINewDirResp, error) {
+	form := url.Values{}
+	form.Set("pid", pid)
+	form.Set("cname", cname)
+	data := strings.NewReader(form.Encode())
+	req, err := http.NewRequest(http.MethodPost, APIURLNewDir, data)
+	if err != nil {
+		return nil, fmt.Errorf("api new dir, call http.NewRequest fail, err: %w", err)
+	}
+
+	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.ContentLength = data.Size()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("api new dir, call client.Do fail, err: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("api new dir, call ioutil.ReadAll fail, err: %w", err)
+	}
+
+	respData := APINewDirResp{}
+	err = json.Unmarshal(body, &respData)
+	if err != nil {
+		return nil, fmt.Errorf("api new dir, call json.Unmarshal fail, body: %s", string(body))
 	}
 
 	return &respData, nil

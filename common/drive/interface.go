@@ -18,6 +18,7 @@ type DriveClient interface {
 	GetFile(filePath string) (File, error)
 	GetFileURL(file File) (string, error)
 	RemoveFile(filePath string) error
+	NewDir(filepath string) error
 	MoveFile(srcPath string, dstPath string) error
 	Proxy(w http.ResponseWriter, req *http.Request, fileURL string)
 }

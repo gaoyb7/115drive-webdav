@@ -85,6 +85,12 @@ type APIDeleteFileResp struct {
 	State bool   `json:"state"`
 }
 
+type APINewDirResp struct {
+	// ErrNo json.Number `json:"errno"`
+	Error string `json:"error"`
+	State bool   `json:"state"`
+}
+
 type APICopyFileResp struct {
 	// ErrNo json.Number `json:"errno"`
 	Error string `json:"error"`
