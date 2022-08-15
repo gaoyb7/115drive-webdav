@@ -182,6 +182,7 @@ func (c *DriveClient) RemoveFile(filePath string) error {
 }
 
 func (c *DriveClient) NewDir(dir string) error {
+	c.limiter.Wait(context.Background())
 	getDirIDResp, err := APIGetDirID(c.HttpClient, dir)
 	if err != nil {
 		return err
