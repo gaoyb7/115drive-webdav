@@ -193,14 +193,17 @@ func (c *DriveClient) NewDir(dir string) error {
 	}
 
 	dir = slashClean(dir)
-	parentDir, dirName := path.Split(dir)
+	parentDir, name := path.Split(dir)
 	getDirIDResp, err = APIGetDirID(c.HttpClient, parentDir)
 	if err != nil {
 		return err
 	}
 
 	pid := getDirIDResp.CategoryID.String()
-	resp, err := APINewDir(c.HttpClient, pid, dirName)
+	if pid == "0" && parentDir != "/" {
+		return nil
+	}
+	resp, err := APINewDir(c.HttpClient, pid, name)
 	if err != nil {
 		return err
 	}
