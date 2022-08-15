@@ -182,8 +182,8 @@ func (c *DriveClient) RemoveFile(filePath string) error {
 }
 
 func (c *DriveClient) NewDir(dir string) error {
-	_, err := APIGetDirID(c.HttpClient, dir)
-	if err == nil {
+	getDirIDResp, err := APIGetDirID(c.HttpClient, dir)
+	if err == nil && getDirIDResp.CategoryID.String() != "0" {
 		return nil
 	}
 
@@ -197,7 +197,7 @@ func (c *DriveClient) NewDir(dir string) error {
 		}
 	}
 
-	getDirIDResp, err := APIGetDirID(c.HttpClient, path)
+	getDirIDResp, err = APIGetDirID(c.HttpClient, path)
 	if err != nil {
 		return err
 	}

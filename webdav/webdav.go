@@ -182,7 +182,7 @@ func (h *Handler) handleNewDir(w http.ResponseWriter, r *http.Request) (status i
 		}
 		return http.StatusMethodNotAllowed, err
 	}
-	return http.StatusNoContent, nil
+	return http.StatusCreated, nil
 }
 
 func (h *Handler) handleMove(w http.ResponseWriter, r *http.Request) (status int, err error) {
