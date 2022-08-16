@@ -291,6 +291,7 @@ func (c *DriveClient) Proxy(w http.ResponseWriter, req *http.Request, targetURL 
 		if err := recover(); err != nil {
 			if realErr, ok := err.(error); ok {
 				if errors.Is(realErr, http.ErrAbortHandler) {
+					logrus.WithError(realErr).Warnf("proxy abort error")
 					return
 				}
 			}
