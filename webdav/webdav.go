@@ -124,14 +124,9 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-
-	fileURL, err := h.DriveClient.GetFileURL(fi)
-	if err != nil {
-		logrus.WithError(err).Errorf("handleGetHeadPost, call h.DriveClient.GetURL fail")
-		return http.StatusInternalServerError, err
-	}
 	w.Header().Set("ETag", etag)
-	h.DriveClient.Proxy(w, r, fileURL)
+
+	h.DriveClient.ServeContent(w, r, fi)
 	return 0, nil
 }
 
@@ -174,7 +169,7 @@ func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status in
 	if r.ContentLength > 0 {
 		return http.StatusUnsupportedMediaType, nil
 	}
-	if err := h.DriveClient.NewDir(reqPath); err != nil {
+	if err := h.DriveClient.MakeDir(reqPath); err != nil {
 		if errors.Is(err, common.ErrNotFound) {
 			return http.StatusNotFound, err
 		}

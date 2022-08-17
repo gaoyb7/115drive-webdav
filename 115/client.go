@@ -130,6 +130,17 @@ func (c *DriveClient) GetFile(filePath string) (drive.File, error) {
 	return nil, common.ErrNotFound
 }
 
+func (c *DriveClient) ServeContent(w http.ResponseWriter, req *http.Request, fi drive.File) {
+	fileURL, err := c.GetFileURL(fi)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		return
+	}
+
+	c.Proxy(w, req, fileURL)
+}
+
 func (c *DriveClient) GetFileURL(file drive.File) (string, error) {
 	pickCode := file.(*FileInfo).PickCode
 	cacheKey := fmt.Sprintf("url:%s", pickCode)
@@ -183,7 +194,7 @@ func (c *DriveClient) RemoveFile(filePath string) error {
 	return nil
 }
 
-func (c *DriveClient) NewDir(dir string) error {
+func (c *DriveClient) MakeDir(dir string) error {
 	c.limiter.Wait(context.Background())
 	getDirIDResp, err := APIGetDirID(c.HttpClient, dir)
 	if err != nil {
@@ -206,7 +217,7 @@ func (c *DriveClient) NewDir(dir string) error {
 	if pid == "0" && parentDir != "/" {
 		return nil
 	}
-	resp, err := APINewDir(c.HttpClient, pid, name)
+	resp, err := APIAddDir(c.HttpClient, pid, name)
 	if err != nil {
 		return err
 	}
@@ -215,7 +226,6 @@ func (c *DriveClient) NewDir(dir string) error {
 	}
 
 	c.flushDir(parentDir)
-
 	return nil
 }
 

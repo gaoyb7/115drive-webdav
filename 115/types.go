@@ -85,7 +85,7 @@ type APIDeleteFileResp struct {
 	State bool   `json:"state"`
 }
 
-type APINewDirResp struct {
+type APIAddDirResp struct {
 	// ErrNo json.Number `json:"errno"`
 	Error string `json:"error"`
 	State bool   `json:"state"`

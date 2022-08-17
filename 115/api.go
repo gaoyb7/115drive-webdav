@@ -21,7 +21,7 @@ const (
 	APIURLGetDownloadURL = "https://proapi.115.com/app/chrome/downurl"
 	APIURLGetDirID       = "https://webapi.115.com/files/getid"
 	APIURLDeleteFile     = "https://webapi.115.com/rb/delete"
-	APIURLNewDir         = "https://webapi.115.com/files/add"
+	APIURLAddDir         = "https://webapi.115.com/files/add"
 	APIURLMoveFile       = "https://webapi.115.com/files/move"
 	APIURLRenameFile     = "https://webapi.115.com/files/batch_rename"
 	APIURLLoginCheck     = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
@@ -227,12 +227,12 @@ func APIDeleteFile(client *http.Client, fid string, pid string) (*APIDeleteFileR
 	return &respData, nil
 }
 
-func APINewDir(client *http.Client, pid string, cname string) (*APINewDirResp, error) {
+func APIAddDir(client *http.Client, pid string, cname string) (*APIAddDirResp, error) {
 	form := url.Values{}
 	form.Set("pid", pid)
 	form.Set("cname", cname)
 	data := strings.NewReader(form.Encode())
-	req, err := http.NewRequest(http.MethodPost, APIURLNewDir, data)
+	req, err := http.NewRequest(http.MethodPost, APIURLAddDir, data)
 	if err != nil {
 		return nil, fmt.Errorf("api new dir, call http.NewRequest fail, err: %w", err)
 	}
@@ -243,18 +243,18 @@ func APINewDir(client *http.Client, pid string, cname string) (*APINewDirResp, e
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("api new dir, call client.Do fail, err: %w", err)
+		return nil, fmt.Errorf("api add dir, call client.Do fail, err: %w", err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("api new dir, call ioutil.ReadAll fail, err: %w", err)
+		return nil, fmt.Errorf("api add dir, call ioutil.ReadAll fail, err: %w", err)
 	}
 
-	respData := APINewDirResp{}
+	respData := APIAddDirResp{}
 	err = json.Unmarshal(body, &respData)
 	if err != nil {
-		return nil, fmt.Errorf("api new dir, call json.Unmarshal fail, body: %s", string(body))
+		return nil, fmt.Errorf("api add dir, call json.Unmarshal fail, body: %s", string(body))
 	}
 
 	return &respData, nil
