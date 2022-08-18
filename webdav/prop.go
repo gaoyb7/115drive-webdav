@@ -270,7 +270,7 @@ func findDisplayName(ctx context.Context, name string, fi drive.File) (string, e
 		// Hide the real name of a possibly prefixed root directory.
 		return "", nil
 	}
-	return escapeXML(fi.GetName()), nil
+	return escapeXML(strings.ReplaceAll(fi.GetName(), "*", ".")), nil
 }
 
 func findContentLength(ctx context.Context, name string, fi drive.File) (string, error) {
