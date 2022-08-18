@@ -120,7 +120,7 @@ type APILoginCheckResp struct {
 }
 
 func (f *FileInfo) GetName() string {
-	return f.Name
+	return strings.ReplaceAll(f.Name, "*", ".")
 }
 
 func (f *FileInfo) GetSize() int64 {
