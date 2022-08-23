@@ -6,6 +6,7 @@ import (
 	"mime"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -22,11 +23,38 @@ import (
 type DriveClientProxy struct {
 	httpClient *http.Client
 	cookieJar  *cookiejar.Jar
-	limiter    *rate.Limiter
 	cache      gcache.Cache
+	limiter    *rate.Limiter
+}
+
+func NewDriveClientProxy(uid string, cid string, seid string) *DriveClientProxy {
+	cookieJar, err := cookiejar.New(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	client := &DriveClientProxy{
+		httpClient: &http.Client{Jar: cookieJar},
+		cookieJar:  cookieJar,
+		cache:      gcache.New(10000).LFU().Build(),
+		limiter:    rate.NewLimiter(5, 10),
+	}
+	client.ImportCredential(uid, cid, seid)
+
+	userID, err := APILoginCheck(client.httpClient)
+	if err != nil {
+		panic(err)
+	}
+	if userID <= 0 {
+		panic("115 drive login fail")
+	}
+	logrus.Infof("115 drive login succ, user_id: %d", userID)
+
+	return client
 }
 
 func (c *DriveClientProxy) Stat(ctx context.Context, name string) (os.FileInfo, error) {
+	logrus.Infof("drive client proxy stat, name: %v", name)
 	name = slashClean(name)
 	if name == "/" || len(name) == 0 {
 		return toWebdavFileInfo(&FileInfo{CategoryID: "0"}), nil
@@ -36,6 +64,7 @@ func (c *DriveClientProxy) Stat(ctx context.Context, name string) (os.FileInfo, 
 	dir, fileName := path.Split(name)
 
 	files, err := c.ReadDir(ctx, dir)
+	logrus.Infof("files: %+v", files)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +78,7 @@ func (c *DriveClientProxy) Stat(ctx context.Context, name string) (os.FileInfo, 
 }
 
 func (c *DriveClientProxy) ReadDir(ctx context.Context, dir string) ([]os.FileInfo, error) {
+	logrus.Infof("drive client proxy read dir, dir: %v", dir)
 	dir = slashClean(dir)
 	cacheKey := fmt.Sprintf("files:%s", dir)
 	if value, err := c.cache.Get(cacheKey); err == nil {
@@ -75,6 +105,7 @@ func (c *DriveClientProxy) ReadDir(ctx context.Context, dir string) ([]os.FileIn
 }
 
 func (c *DriveClientProxy) ReadDirByID(ctx context.Context, cid string) ([]os.FileInfo, error) {
+	logrus.Infof("drive client proxy read dir by id, cid: %v", cid)
 	pageSize := int64(1000)
 	offset := int64(0)
 	files := make([]os.FileInfo, 0)
@@ -98,6 +129,7 @@ func (c *DriveClientProxy) ReadDirByID(ctx context.Context, cid string) ([]os.Fi
 }
 
 func (c *DriveClientProxy) Remove(ctx context.Context, name string) error {
+	logrus.Infof("drive client proxy remove, name: %v", name)
 	c.limiter.Wait(ctx)
 	fi, err := c.Stat(ctx, name)
 	if err != nil {
@@ -131,6 +163,7 @@ func (c *DriveClientProxy) Remove(ctx context.Context, name string) error {
 }
 
 func (c *DriveClientProxy) Mkdir(ctx context.Context, dir string) error {
+	logrus.Infof("drive client proxy mkdir, dir: %v", dir)
 	c.limiter.Wait(context.Background())
 	getDirIDResp, err := APIGetDirID(c.httpClient, dir)
 	if err != nil {
@@ -163,6 +196,42 @@ func (c *DriveClientProxy) Mkdir(ctx context.Context, dir string) error {
 
 	c.flushDir(parentDir)
 	return nil
+}
+
+func (c *DriveClientProxy) ProxyRequest(ctx context.Context, w http.ResponseWriter, req *http.Request, targetURL string) {
+}
+
+func (c *DriveClientProxy) ImportCredential(uid string, cid string, seid string) {
+	cookies := map[string]string{
+		"UID":  uid,
+		"CID":  cid,
+		"SEID": seid,
+	}
+	c.importCookies(CookieDomain115, "/", cookies)
+}
+
+func (c *DriveClientProxy) importCookies(domain string, path string, cookies map[string]string) {
+	url := &url.URL{
+		Scheme: "https",
+		Path:   "/",
+	}
+	if domain[0] == '.' {
+		url.Host = "www" + domain
+	} else {
+		url.Host = domain
+	}
+	cks := make([]*http.Cookie, 0)
+	for name, value := range cookies {
+		cookie := &http.Cookie{
+			Name:     name,
+			Value:    value,
+			Domain:   domain,
+			Path:     path,
+			HttpOnly: true,
+		}
+		cks = append(cks, cookie)
+	}
+	c.cookieJar.SetCookies(url, cks)
 }
 
 func (c *DriveClientProxy) getURL(f os.FileInfo) (string, error) {
