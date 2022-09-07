@@ -20,12 +20,19 @@ https://github.com/gaoyb7/115drive-webdav/releases
 
 ## Docker 运行
 ```bash
+# 通过命令参数获取配置
 docker run -d -p 8081:8081 gaoyb7/115drive-webdav \
 	--host=0.0.0.0 --port=8081 \
 	--user=user --pwd=123456 \
 	--uid=xxxxxx \
 	--cid=xxxxxx \
 	--seid=xxxxxx
+	
+# 通过配置文件获取配置
+docker run -d -p 8081:8081 \
+	-v /path/to/your/config:/etc/115drive-webdav.json \
+	gaoyb7/115drive-webdav \
+	--config /etc/115drive-webdav.json
 ```
 
 ## 参数说明
