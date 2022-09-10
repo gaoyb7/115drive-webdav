@@ -7,7 +7,7 @@
 
 115 网盘 WebDav 服务，可配合支持 WebDAV 协议的客户端 App 食用，如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 
 
-rclone 改版 https://github.com/gaoyb7/rclone （开发分支 feat-115-drive）支持 115 网盘 WebDav 服务搭建（rclone serve webdav），及直接挂载为本地磁盘（rclone mount），目前支持只读模式，提供预编译包可自行下载试用 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.0-rclone
+新项目 rclone 改版，对比 115drive-在webdav 功能更强大，支持 WebDav 服务，本地磁盘挂载，文件批量下载到本地等功能，提供预编译包可自行下载试用 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.0-rclone
 
 ## 下载
 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.4
@@ -83,9 +83,7 @@ docker run -d -p 8081:8081 \
 ### Android
 TODO
 
-## rclone
-rclone 改版，支持除了文件上传外的所有功能，相比 115drive-webdav 功能更强大
-
+## rclone 魔改版本
 ### 配置生成
 ```
 # 根据提示生成对应的 115 配置，生成配置后，可进行 rclone WebDav 服务启动，磁盘挂载等操作
@@ -98,7 +96,7 @@ rclone 改版，支持除了文件上传外的所有功能，相比 115drive-web
 ./rclone serve webdav --addr :8081  -v 115drive:
 ```
 
-### 磁盘挂载
+### 本地磁盘挂载
 ```
 ./rclone mount -v \
         --allow-other \
@@ -111,7 +109,7 @@ rclone 改版，支持除了文件上传外的所有功能，相比 115drive-web
         115drive: /path/to/local
 ```
 
-### 文件批量复制到本地
+### 文件批量下载
 ```
 ./rclone copy -P --multi-thread-streams=2 --transfers=5 115drive:/path/to/remote ./path/to/local
 ```
