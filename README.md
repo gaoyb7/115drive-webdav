@@ -7,7 +7,7 @@
 
 115 网盘 WebDav 服务，可配合支持 WebDAV 协议的客户端 App 食用，如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 
 
-rclone 改版 https://github.com/gaoyb7/rclone （开发分支 feat-115-drive）支持 115 网盘 WebDav 服务搭建（rclone serve webdav），及直接挂载为本地磁盘（rclone mount），目前支持只读模式，可自行下载试用 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.0-rclone
+rclone 改版 https://github.com/gaoyb7/rclone （开发分支 feat-115-drive）支持 115 网盘 WebDav 服务搭建（rclone serve webdav），及直接挂载为本地磁盘（rclone mount），目前支持只读模式，提供预编译包可自行下载试用 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.0-rclone
 
 ## 下载
 https://github.com/gaoyb7/115drive-webdav/releases
