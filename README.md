@@ -10,7 +10,7 @@
 rclone 改版 https://github.com/gaoyb7/rclone （开发分支 feat-115-drive）支持 115 网盘 WebDav 服务搭建（rclone serve webdav），及直接挂载为本地磁盘（rclone mount），目前支持只读模式，提供预编译包可自行下载试用 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.0-rclone
 
 ## 下载
-https://github.com/gaoyb7/115drive-webdav/releases
+https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.4
 
 ## 运行
 需要获取 115 网盘 Cookie 信息，包括 UID、CID、SEID，网页版 Cookie 时效较短，建议抓包 App 请求获取 Cookie，iOS 系统可使用 [Stream](https://apps.apple.com/cn/app/stream/id1312141691) 抓包
