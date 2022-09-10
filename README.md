@@ -82,3 +82,35 @@ docker run -d -p 8081:8081 \
 
 ### Android
 TODO
+
+## rclone
+rclone 改版，支持除了文件上传外的所有功能，相比 115drive-webdav 功能更强大
+
+### 配置生成
+```
+# 根据提示生成对应的 115 配置，生成配置后，可进行 rclone WebDav 服务启动，磁盘挂载等操作
+./rclone config
+```
+
+### WebDav 服务启动
+```
+./rclone serve webdav --addr :8081  -v 115drive:
+```
+
+### 磁盘挂载
+```
+./rclone mount -v \
+        --allow-other \
+        --read-only \
+        --vfs-cache-mode=full \
+        --vfs-cache-max-size=4G \
+        --vfs-read-chunk-size=8M \
+        --cache-dir=/data/.cache/rclone \
+        --buffer-size=32M \
+        115drive: /path/to/local
+```
+
+### 文件批量复制到本地
+```
+./rclone copy -P --multi-thread-streams=2 --transfers=5 115drive:/path/to/remote ./path/to/local
+```
