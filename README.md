@@ -7,7 +7,7 @@
 
 115 网盘 WebDav 服务，可配合支持 WebDAV 协议的客户端 App 食用，如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 
 
-新项目 rclone 改版，对比 115drive-在webdav 功能更强大，支持 WebDav 服务，本地磁盘挂载，文件批量下载到本地等功能，提供预编译包可自行下载试用 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.0-rclone
+新项目 rclone 改版，对比 115drive-webdav 功能更强大，支持 WebDav 服务，本地磁盘挂载，文件批量下载到本地等功能，提供预编译包可自行下载试用 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.0-rclone
 
 ## 下载
 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.4
@@ -83,7 +83,7 @@ docker run -d -p 8081:8081 \
 ### Android
 TODO
 
-## rclone 魔改版本
+## rclone
 ### 配置生成
 ```
 # 根据提示生成对应的 115 配置，生成配置后，可进行 rclone WebDav 服务启动，磁盘挂载等操作
