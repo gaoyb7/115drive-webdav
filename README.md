@@ -7,10 +7,10 @@
 
 115 网盘 WebDav 服务，可配合支持 WebDAV 协议的客户端 App 食用，如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 
 
-新项目 rclone 改版，对比 115drive-webdav 功能更强大，支持 WebDav 服务，本地磁盘挂载，文件批量下载到本地等功能，提供预编译包可自行下载试用 https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.0-rclone
+新项目 rclone 改版，对比 115drive-webdav 功能更强大，支持 WebDav 服务，本地磁盘挂载，文件批量下载到本地等功能，提供预编译包可自行下载试用 https://github.com/gaoyb7/rclone-release/releases
 
 ## 下载
-https://github.com/gaoyb7/115drive-webdav/releases/tag/v0.1.4
+https://github.com/gaoyb7/115drive-webdav/releases
 
 ## 运行
 需要获取 115 网盘 Cookie 信息，包括 UID、CID、SEID，网页版 Cookie 时效较短，建议抓包 App 请求获取 Cookie，iOS 系统可使用 [Stream](https://apps.apple.com/cn/app/stream/id1312141691) 抓包
