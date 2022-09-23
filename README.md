@@ -17,6 +17,7 @@ https://github.com/gaoyb7/115drive-webdav/releases
 ```bash
 ./115drive-webdav --host=0.0.0.0 --port=8080 --user=user --pwd=123456 --uid=xxxxxx --cid=xxxxxxx --seid=xxxxx
 ```
+服务启动成功后，用支持 WebDav 协议的客户端连接即可，不支持浏览器直接打开
 
 ## Docker 运行
 ```bash
