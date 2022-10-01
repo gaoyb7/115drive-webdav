@@ -1,7 +1,10 @@
-FROM alpine:latest
+FROM debian:latest
 
-ENTRYPOINT ["/usr/bin/115drive-webdav"]
+RUN apt-get update && \
+    apt-get install -y wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    wget https://raw.githubusercontent.com/gaoyb7/115drive-webdav/main/115/libencode115.so -O /usr/lib/libencode115.so
 
 COPY 115drive-webdav /usr/bin/115drive-webdav
 
-RUN wget https://raw.githubusercontent.com/gaoyb7/115drive-webdav/main/115/libencode115.so -O /lib64/libencode115.so
+ENTRYPOINT ["/usr/bin/115drive-webdav"]
