@@ -12,6 +12,9 @@
 ## 下载
 https://github.com/gaoyb7/115drive-webdav/releases
 
+* 暂只支持 Linux x86_64 版本，程序下载后，需要额外下载加解密库 https://raw.githubusercontent.com/gaoyb7/115drive-webdav/main/115/libencode115.so 到 /usr/lib 目录下才可运行。
+* 需要使用 App 的 Cookie，浏览器版本的 Cookie 无法正常下载文件，抓包方法参考下面说明。
+
 ## 运行
 需要获取 115 网盘 Cookie 信息，包括 UID、CID、SEID，网页版 Cookie 时效较短，建议抓包 App 请求获取 Cookie，iOS 系统可使用 [Stream](https://apps.apple.com/cn/app/stream/id1312141691) 抓包
 ```bash
