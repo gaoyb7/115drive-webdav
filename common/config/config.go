@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"github.com/gaoyb7/115drive-webdav/common/flag"
@@ -17,6 +16,7 @@ type config struct {
 	Port     int    `json:"port"`
 	User     string `json:"user"`
 	Password string `json:"pwd"`
+	Replace  string `json:"replace"`
 }
 
 var Config config
@@ -32,11 +32,12 @@ func init() {
 		Config.Port = flag.CliPort
 		Config.User = flag.CliUser
 		Config.Password = flag.CliPassword
+		Config.Replace = flag.Replace
 	}
 }
 
 func load(filename string) {
-	data, err := ioutil.ReadFile(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		pwd, _ := os.Getwd()
 		logrus.WithField("pwd", pwd).WithField("filename", filename).Errorf("err: %v", err)

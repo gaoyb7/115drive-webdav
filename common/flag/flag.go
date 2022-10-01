@@ -13,6 +13,7 @@ var (
 	CliUser     string
 	CliPassword string
 	ConfigFile  string
+	Replace     string
 )
 
 func init() {
@@ -24,6 +25,7 @@ func init() {
 	flag.StringVar(&CliUser, "user", "user", "webdav auth username")
 	flag.StringVar(&CliPassword, "pwd", "123456", "webdav auth password")
 	flag.IntVar(&CliPort, "port", 8080, "webdav server port")
+	flag.StringVar(&Replace, "replace", "*==.", "replace special characters")
 }
 
 func init() {

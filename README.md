@@ -19,6 +19,8 @@ https://github.com/gaoyb7/115drive-webdav/releases
 ```
 服务启动成功后，用支持 WebDav 协议的客户端连接即可，不支持浏览器直接打开
 
+替换后缀请在config中替换 `replace`的内容 默认`"*==."`,多个`"a==b|c==d|x==y"`
+
 ## Docker 运行
 ```bash
 # 通过命令参数获取配置

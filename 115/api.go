@@ -13,7 +13,7 @@ import (
 	"github.com/gaoyb7/115drive-webdav/common"
 )
 
-const (
+var (
 	UserAgent       = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36 115Browser/23.9.3"
 	UserAgentForURL = "Mozilla/5.0; 115Desktop/2.0.1.7"
 
