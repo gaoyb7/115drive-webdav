@@ -51,7 +51,8 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 		Transport: defaultClient.HttpClient.Transport,
 		Director: func(req *http.Request) {
 			req.Header.Set("Referer", "https://115.com/")
-			req.Header.Set("User-Agent", UserAgent)
+			// req.Header.Set("User-Agent", UserAgent)
+			req.Header.Set("User-Agent", UserAgentForURL)
 			req.Header.Set("Host", req.Host)
 		},
 	}

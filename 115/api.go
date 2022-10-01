@@ -14,17 +14,19 @@ import (
 )
 
 const (
-	UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36 115Browser/23.9.3"
+	UserAgent       = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36 115Browser/23.9.3"
+	UserAgentForURL = "Mozilla/5.0; 115Desktop/2.0.1.7"
 
-	APIURLGetFiles       = "https://webapi.115.com/files"
-	APIURLGetFileInfo    = "https://webapi.115.com/files/get_info"
-	APIURLGetDownloadURL = "https://proapi.115.com/app/chrome/downurl"
-	APIURLGetDirID       = "https://webapi.115.com/files/getid"
-	APIURLDeleteFile     = "https://webapi.115.com/rb/delete"
-	APIURLAddDir         = "https://webapi.115.com/files/add"
-	APIURLMoveFile       = "https://webapi.115.com/files/move"
-	APIURLRenameFile     = "https://webapi.115.com/files/batch_rename"
-	APIURLLoginCheck     = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
+	APIURLGetFiles          = "https://webapi.115.com/files"
+	APIURLGetFileInfo       = "https://webapi.115.com/files/get_info"
+	APIURLGetDownloadURL    = "https://proapi.115.com/app/chrome/downurl"
+	APIURLGetDownloadURLNew = "https://proapi.115.com/pc/ufile/downurl"
+	APIURLGetDirID          = "https://webapi.115.com/files/getid"
+	APIURLDeleteFile        = "https://webapi.115.com/rb/delete"
+	APIURLAddDir            = "https://webapi.115.com/files/add"
+	APIURLMoveFile          = "https://webapi.115.com/files/move"
+	APIURLRenameFile        = "https://webapi.115.com/files/batch_rename"
+	APIURLLoginCheck        = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
 
 	CookieDomain115   = ".115.com"
 	CookieDomainAnxia = ".anxia.com"
@@ -104,14 +106,15 @@ func APIGetDownloadURL(client *http.Client, pickCode string) (*DownloadInfo, err
 	key := GenerateKey()
 	params, _ := json.Marshal(map[string]string{"pickcode": pickCode})
 	form := url.Values{}
-	form.Set("data", Encode(params, key))
+	dataContent, _ := Encode([]byte(params), []byte(key))
+	form.Set("data", string(dataContent))
 	data := strings.NewReader(form.Encode())
-	req, err := http.NewRequest(http.MethodPost, APIURLGetDownloadURL, data)
+	req, err := http.NewRequest(http.MethodPost, APIURLGetDownloadURLNew, data)
 	if err != nil {
 		return nil, fmt.Errorf("api get download url, call http.NewRequest fail, err: %w", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set("User-Agent", UserAgentForURL)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.ContentLength = data.Size()
 	q := req.URL.Query()
@@ -139,7 +142,7 @@ func APIGetDownloadURL(client *http.Client, pickCode string) (*DownloadInfo, err
 		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(respData.Data))
 	}
 
-	data2, err := Decode(resultData, key)
+	data2, err := Decode([]byte(resultData), []byte(key))
 	if err != nil {
 		return nil, fmt.Errorf("api get download url, call Decode fail, err: %w", err)
 	}
