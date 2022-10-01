@@ -6,4 +6,5 @@
 	"port": 8081,
 	"user": "user",
 	"pwd": "123456"
+	"replace":"*==."
 }

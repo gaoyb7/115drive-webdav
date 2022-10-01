@@ -2,6 +2,8 @@ package _115
 
 import (
 	"encoding/json"
+	"github.com/gaoyb7/115drive-webdav/common/config"
+	"strings"
 	"time"
 )
 
@@ -120,7 +122,32 @@ type APILoginCheckResp struct {
 }
 
 func (f *FileInfo) GetName() string {
-	return f.Name
+	reName := f.Name
+	var s []string
+	c := config.Config.Replace
+	if c != "" {
+		if strings.Contains(c, "|") {
+			s = strings.Split(c, "|")
+		}
+		if s == nil {
+			o := strings.Split(c, "==")
+			if len(o) == 2 {
+				return strings.ReplaceAll(reName, o[0], o[1])
+			}
+			return reName
+		}
+		for _, r := range s {
+
+			o := strings.Split(r, "==")
+			if len(o) == 2 {
+				reName = strings.ReplaceAll(reName, o[0], o[1])
+			}
+
+		}
+
+	}
+	return reName
+
 }
 
 func (f *FileInfo) GetSize() int64 {

@@ -7,8 +7,8 @@ import (
 	"unsafe"
 )
 
-//#cgo CFLAGS: -I.
-//#cgo LDFLAGS: -L. -lencode115
+//#cgo CFLAGS: -I${SRCDIR}
+//#cgo LDFLAGS: -L${SRCDIR} -lencode115
 //
 //#include "encode115.h"
 import "C"
