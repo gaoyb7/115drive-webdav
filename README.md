@@ -25,7 +25,7 @@ https://github.com/gaoyb7/115drive-webdav/releases
 docker run -d \
         -p 8081:8081 \
 	--restart unless-stopped \
-        gaoyb7/115drive-webdav \
+        gaoyb7/115drive-webdav:latest \
 	--host=0.0.0.0 --port=8081 \
 	--user=user --pwd=123456 \
 	--uid=xxxxxx \
@@ -33,8 +33,11 @@ docker run -d \
 	--seid=xxxxxx
 	
 # 通过配置文件获取配置
-docker run -d -p 8081:8081 \
+# /path/to/your/config 替换为实际配置文件地址
+docker run -d \
+        -p 8081:8081 \
 	-v /path/to/your/config:/etc/115drive-webdav.json \
+        --restart unless-stopped \
 	gaoyb7/115drive-webdav \
 	--config /etc/115drive-webdav.json
 ```
