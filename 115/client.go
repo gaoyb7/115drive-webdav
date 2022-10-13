@@ -71,11 +71,8 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 
 	// login check
 	userID, err := APILoginCheck(defaultClient.HttpClient)
-	if err != nil {
-		panic(err)
-	}
-	if userID <= 0 {
-		panic("115 drive login fail")
+	if err != nil || userID <= 0 {
+		logrus.WithError(err).Panicf("115 drive login fail")
 	}
 	logrus.Infof("115 drive login succ, user_id: %d", userID)
 }
