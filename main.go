@@ -5,9 +5,8 @@ import (
 	"net/http"
 
 	_115 "github.com/gaoyb7/115drive-webdav/115"
-	"github.com/gaoyb7/115drive-webdav/webdav"
-
 	"github.com/gaoyb7/115drive-webdav/common/config"
+	"github.com/gaoyb7/115drive-webdav/webdav"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -18,13 +17,8 @@ var (
 
 func main() {
 	logrus.SetReportCaller(true)
-	_115.MustInit115DriveClient(cfg.Uid, cfg.Cid, cfg.Seid)
-	startWebdavServer(cfg.Host, cfg.Port)
-}
-
-func startWebdavServer(host string, port int) {
 	webdavHandler := webdav.Handler{
-		DriveClient: _115.Get115DriveClient(),
+		DriveClient: _115.MustNew115DriveClient(cfg.Uid, cfg.Cid, cfg.Seid),
 		LockSystem:  webdav.NewMemLS(),
 		Logger: func(req *http.Request, err error) {
 			if err != nil {
@@ -50,7 +44,7 @@ func startWebdavServer(host string, port int) {
 	dav.Handle("COPY", "/*path", webdavHandleFunc)
 	dav.Handle("MOVE", "/*path", webdavHandleFunc)
 
-	if err := r.Run(fmt.Sprintf("%s:%d", host, port)); err != nil {
+	if err := r.Run(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)); err != nil {
 		logrus.Panic(err)
 	}
 }

@@ -19,10 +19,6 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var (
-	defaultClient *DriveClient
-)
-
 type DriveClient struct {
 	HttpClient   *resty.Client
 	cache        gcache.Cache
@@ -30,11 +26,7 @@ type DriveClient struct {
 	limiter      *rate.Limiter
 }
 
-func Get115DriveClient() drive.DriveClient {
-	return defaultClient
-}
-
-func MustInit115DriveClient(uid string, cid string, seid string) {
+func MustNew115DriveClient(uid string, cid string, seid string) *DriveClient {
 	httpClient := resty.New().SetCookie(&http.Cookie{
 		Name:     "UID",
 		Value:    uid,
@@ -55,7 +47,7 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 		HttpOnly: true,
 	}).SetHeader("User-Agent", UserAgent)
 
-	defaultClient = &DriveClient{
+	client := &DriveClient{
 		HttpClient: httpClient,
 		cache:      gcache.New(10000).LFU().Build(),
 		limiter:    rate.NewLimiter(8, 0),
@@ -70,11 +62,13 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 	}
 
 	// login check
-	userID, err := APILoginCheck(defaultClient.HttpClient)
+	userID, err := APILoginCheck(client.HttpClient)
 	if err != nil || userID <= 0 {
 		logrus.WithError(err).Panicf("115 drive login fail")
 	}
 	logrus.Infof("115 drive login succ, user_id: %d", userID)
+
+	return client
 }
 
 func (c *DriveClient) GetFiles(dir string) ([]drive.File, error) {
