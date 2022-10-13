@@ -58,7 +58,7 @@ func MustInit115DriveClient(uid string, cid string, seid string) {
 	defaultClient = &DriveClient{
 		HttpClient: httpClient,
 		cache:      gcache.New(10000).LFU().Build(),
-		limiter:    rate.NewLimiter(5, 10),
+		limiter:    rate.NewLimiter(8, 0),
 		reserveProxy: &httputil.ReverseProxy{
 			Transport: httpClient.GetClient().Transport,
 			Director: func(req *http.Request) {
