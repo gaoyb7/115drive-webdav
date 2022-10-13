@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 
 	"github.com/gaoyb7/115drive-webdav/common/flag"
 	"github.com/sirupsen/logrus"
@@ -38,11 +37,11 @@ func init() {
 func load(filename string) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		pwd, _ := os.Getwd()
-		logrus.WithField("pwd", pwd).WithField("filename", filename).Errorf("err: %v", err)
+		logrus.WithError(err).Panicf("call ioutil.ReadFile fail, filename: %v", filename)
 	}
+
 	err = json.Unmarshal(data, &Config)
 	if err != nil {
-		logrus.WithField("filename", filename).Errorf("err: %v", err)
+		logrus.WithError(err).Panicf("call json.Unmarshal fail, filename: %v", filename)
 	}
 }
