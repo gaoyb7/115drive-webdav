@@ -3,14 +3,12 @@ package _115
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gaoyb7/115drive-webdav/common"
+	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -25,130 +23,80 @@ const (
 	APIURLMoveFile       = "https://webapi.115.com/files/move"
 	APIURLRenameFile     = "https://webapi.115.com/files/batch_rename"
 	APIURLLoginCheck     = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
-
-	CookieDomain115   = ".115.com"
-	CookieDomainAnxia = ".anxia.com"
 )
 
-func APIGetFiles(client *http.Client, cid string, pageSize int64, offset int64) (*APIGetFilesResp, error) {
-	req, err := http.NewRequest(http.MethodGet, APIURLGetFiles, nil)
+func APIGetFiles(client *resty.Client, cid string, pageSize int64, offset int64) (*APIGetFilesResp, error) {
+	result := APIGetFilesResp{}
+	_, err := client.R().
+		SetQueryParams(map[string]string{
+			"aid":              "1",
+			"cid":              cid,
+			"o":                "user_ptime",
+			"asc":              "0",
+			"offset":           strconv.FormatInt(offset, 10),
+			"show_dir":         "1",
+			"limit":            strconv.FormatInt(pageSize, 10),
+			"snap":             "0",
+			"record_open_time": "1",
+			"format":           "json",
+			"fc_mix":           "0",
+		}).
+		SetResult(&result).
+		ForceContentType("application/json").
+		Get(APIURLGetFiles)
 	if err != nil {
-		return nil, fmt.Errorf("api get files, call http.NewRequest fail, err: %w", err)
+		return nil, fmt.Errorf("api get files fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-	q := req.URL.Query()
-	q.Add("aid", "1")
-	q.Add("cid", cid)
-	q.Add("o", "user_ptime")
-	q.Add("asc", "0")
-	q.Add("offset", strconv.FormatInt(offset, 10))
-	q.Add("show_dir", "1")
-	q.Add("limit", strconv.FormatInt(pageSize, 10))
-	q.Add("snap", "0")
-	q.Add("record_open_time", "1")
-	q.Add("format", "json")
-	q.Add("fc_mix", "0")
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("api get files, call client.Do fail, err: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("api get files, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APIGetFilesResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return nil, fmt.Errorf("api get files, call json.Unmarshal fail, body: %s", string(body))
-	}
-	return &respData, nil
+	return &result, nil
 }
 
-func APIGetFileInfo(client *http.Client, fid string) (*APIGetFileInfoResp, error) {
-	req, err := http.NewRequest(http.MethodGet, APIURLGetFileInfo, nil)
+func APIGetFileInfo(client *resty.Client, fid string) (*APIGetFileInfoResp, error) {
+	result := APIGetFileInfoResp{}
+	_, err := client.R().
+		SetQueryParam("file_id", fid).
+		SetResult(&result).
+		ForceContentType("application/json").
+		Get(APIURLGetFileInfo)
 	if err != nil {
-		return nil, fmt.Errorf("api get file info, call http.NewRequest fail, err: %w", err)
+		return nil, fmt.Errorf("api get file info fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-	q := req.URL.Query()
-	q.Add("file_id", fid)
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("api get file info, call client.Do fail, err: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("api get file info, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APIGetFileInfoResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return nil, fmt.Errorf("api get file info, call json.Unmarshal fail, body: %s", string(body))
-	}
-	return &respData, err
+	return &result, err
 }
 
-func APIGetDownloadURL(client *http.Client, pickCode string) (*DownloadInfo, error) {
+func APIGetDownloadURL(client *resty.Client, pickCode string) (*DownloadInfo, error) {
 	key := GenerateKey()
 	params, _ := json.Marshal(map[string]string{"pickcode": pickCode})
-	form := url.Values{}
-	form.Set("data", string(Encode(params, key)))
-	data := strings.NewReader(form.Encode())
-	req, err := http.NewRequest(http.MethodPost, APIURLGetDownloadURL, data)
+
+	result := APIBaseResp{}
+	_, err := client.R().
+		SetQueryParam("t", strconv.FormatInt(time.Now().Unix(), 10)).
+		SetFormData(map[string]string{
+			"data": string(Encode(params, key)),
+		}).
+		SetResult(&result).
+		ForceContentType("application/json").
+		Post(APIURLGetDownloadURL)
 	if err != nil {
-		return nil, fmt.Errorf("api get download url, call http.NewRequest fail, err: %w", err)
+		return nil, fmt.Errorf("api get download url fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.ContentLength = data.Size()
-	q := req.URL.Query()
-	q.Add("t", strconv.FormatInt(time.Now().Unix(), 10))
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("api get download url, call client.Do fail, err: %w", err)
+	var encodedData string
+	if err = json.Unmarshal(result.Data, &encodedData); err != nil {
+		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(result.Data))
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("api get download url, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APIBaseResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(body))
-	}
-
-	var resultData string
-	if err = json.Unmarshal(respData.Data, &resultData); err != nil {
-		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(respData.Data))
-	}
-
-	data2, err := Decode(resultData, key)
+	decodedData, err := Decode(encodedData, key)
 	if err != nil {
 		return nil, fmt.Errorf("api get download url, call Decode fail, err: %w", err)
 	}
-	result := DownloadData{}
-	if err := json.Unmarshal(data2, &result); err != nil {
-		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(data2))
+
+	resp := DownloadData{}
+	if err := json.Unmarshal(decodedData, &resp); err != nil {
+		return nil, fmt.Errorf("api get download url, call json.Unmarshal fail, body: %s", string(decodedData))
 	}
 
-	for _, info := range result {
+	for _, info := range resp {
 		fileSize, _ := info.FileSize.Int64()
 		if fileSize == 0 {
 			return nil, common.ErrNotFound
@@ -159,198 +107,103 @@ func APIGetDownloadURL(client *http.Client, pickCode string) (*DownloadInfo, err
 	return nil, nil
 }
 
-func APIGetDirID(client *http.Client, dir string) (*APIGetDirIDResp, error) {
+func APIGetDirID(client *resty.Client, dir string) (*APIGetDirIDResp, error) {
 	if strings.HasPrefix(dir, "/") {
 		dir = dir[1:]
 	}
 
-	req, err := http.NewRequest(http.MethodGet, APIURLGetDirID, nil)
+	result := APIGetDirIDResp{}
+	_, err := client.R().
+		SetQueryParam("path", dir).
+		SetResult(&result).
+		ForceContentType("application/json").
+		Get(APIURLGetDirID)
 	if err != nil {
-		return nil, fmt.Errorf("api get dir id, call http.NewRequest fail, err: %w", err)
+		return nil, fmt.Errorf("api get dir id fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-	q := req.URL.Query()
-	q.Add("path", dir)
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("api get dir id, call client.Do fail, err: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("api get dir id, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APIGetDirIDResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return nil, fmt.Errorf("api get dir id, call json.Unmarshal fail, body: %s", string(body))
-	}
-	return &respData, nil
+	return &result, nil
 }
 
-func APIDeleteFile(client *http.Client, fid string, pid string) (*APIDeleteFileResp, error) {
-	form := url.Values{}
-	form.Set("fid[0]", fid)
-	form.Set("pid", pid)
-	form.Set("ignore_warn", "1")
-	data := strings.NewReader(form.Encode())
-	req, err := http.NewRequest(http.MethodPost, APIURLDeleteFile, data)
+func APIDeleteFile(client *resty.Client, fid string, pid string) (*APIDeleteFileResp, error) {
+	result := APIDeleteFileResp{}
+	_, err := client.R().
+		SetFormData(map[string]string{
+			"fid[0]":      fid,
+			"pid":         pid,
+			"ignore_warn": "1",
+		}).
+		SetResult(&result).
+		ForceContentType("application/json").
+		Post(APIURLDeleteFile)
 	if err != nil {
-		return nil, fmt.Errorf("api delete file, call http.NewRequest fail, err: %w", err)
+		return nil, fmt.Errorf("api delete file fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.ContentLength = data.Size()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("api delete file, call client.Do fail, err: %w", err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("api delete file, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APIDeleteFileResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return nil, fmt.Errorf("api delete file, call json.Unmarshal fail, body: %s", string(body))
-	}
-
-	return &respData, nil
+	return &result, nil
 }
 
-func APIAddDir(client *http.Client, pid string, cname string) (*APIAddDirResp, error) {
-	form := url.Values{}
-	form.Set("pid", pid)
-	form.Set("cname", cname)
-	data := strings.NewReader(form.Encode())
-	req, err := http.NewRequest(http.MethodPost, APIURLAddDir, data)
+func APIAddDir(client *resty.Client, pid string, cname string) (*APIAddDirResp, error) {
+	result := APIAddDirResp{}
+	_, err := client.R().
+		SetFormData(map[string]string{
+			"pid":   pid,
+			"cname": cname,
+		}).
+		SetResult(&result).
+		ForceContentType("application/json").
+		Post(APIURLAddDir)
 	if err != nil {
-		return nil, fmt.Errorf("api new dir, call http.NewRequest fail, err: %w", err)
+		return nil, fmt.Errorf("api add dir fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.ContentLength = data.Size()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("api add dir, call client.Do fail, err: %w", err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("api add dir, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APIAddDirResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return nil, fmt.Errorf("api add dir, call json.Unmarshal fail, body: %s", string(body))
-	}
-
-	return &respData, nil
+	return &result, nil
 }
 
-func APIMoveFile(client *http.Client, fid string, pid string) (*APIMoveFileResp, error) {
-	form := url.Values{}
-	form.Set("fid[0]", fid)
-	form.Set("pid", pid)
-	data := strings.NewReader(form.Encode())
-	req, err := http.NewRequest(http.MethodPost, APIURLMoveFile, data)
+func APIMoveFile(client *resty.Client, fid string, pid string) (*APIMoveFileResp, error) {
+	result := APIMoveFileResp{}
+	_, err := client.R().
+		SetFormData(map[string]string{
+			"fid[0]": fid,
+			"pid":    pid,
+		}).
+		SetResult(&result).
+		ForceContentType("application/json").
+		Post(APIURLMoveFile)
 	if err != nil {
-		return nil, fmt.Errorf("api move file, call http.NewRequest fail, err: %w", err)
+		return nil, fmt.Errorf("api move file fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.ContentLength = data.Size()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("api move file, call client.Do fail, err: %w", err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("api move file, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APIMoveFileResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return nil, fmt.Errorf("api move file, call json.Unmarshal fail, body: %s", string(body))
-	}
-
-	return &respData, nil
+	return &result, nil
 }
 
-func APIRenameFile(client *http.Client, fid string, name string) (*APIRenameFileResp, error) {
-	form := url.Values{}
-	form.Set(fmt.Sprintf("files_new_name[%s]", fid), name)
-	data := strings.NewReader(form.Encode())
-	req, err := http.NewRequest(http.MethodPost, APIURLRenameFile, data)
+func APIRenameFile(client *resty.Client, fid string, name string) (*APIRenameFileResp, error) {
+	result := APIRenameFileResp{}
+	_, err := client.R().
+		SetFormData(map[string]string{
+			fmt.Sprintf("files_new_name[%s]", fid): name,
+		}).
+		SetResult(&result).
+		ForceContentType("application/json").
+		Post(APIURLRenameFile)
 	if err != nil {
-		return nil, fmt.Errorf("api rename file, call http.NewRequest fail, err: %w", err)
+		return nil, fmt.Errorf("api rename file fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.ContentLength = data.Size()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("api rename file, call client.Do fail, err: %w", err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("api rename file, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APIRenameFileResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return nil, fmt.Errorf("api rename file, call json.Unmarshal fail, body: %s", string(body))
-	}
-
-	return &respData, nil
+	return &result, nil
 
 }
 
-func APILoginCheck(client *http.Client) (int64, error) {
-	req, err := http.NewRequest(http.MethodGet, APIURLLoginCheck, nil)
+func APILoginCheck(client *resty.Client) (int64, error) {
+	result := APILoginCheckResp{}
+	_, err := client.R().
+		SetResult(&result).
+		ForceContentType("application/json").
+		Get(APIURLLoginCheck)
 	if err != nil {
-		return 0, fmt.Errorf("api login check, call http.NewRequest fail, err: %w", err)
+		return 0, fmt.Errorf("api login check fail, err: %v", err)
 	}
 
-	req.Header.Set("User-Agent", UserAgent)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0, fmt.Errorf("api login check, call client.Do fail, err: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, fmt.Errorf("api login check, call ioutil.ReadAll fail, err: %w", err)
-	}
-
-	respData := APILoginCheckResp{}
-	err = json.Unmarshal(body, &respData)
-	if err != nil {
-		return 0, fmt.Errorf("api login check, call json.Unmarshal fail, body: %s", string(body))
-	}
-
-	userID, _ := respData.Data.UserID.Int64()
+	userID, _ := result.Data.UserID.Int64()
 	return userID, nil
 }
