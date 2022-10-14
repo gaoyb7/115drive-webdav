@@ -2,9 +2,9 @@ package config
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 
-	"github.com/gaoyb7/115drive-webdav/common/flag"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,20 +18,35 @@ type config struct {
 	Password string `json:"pwd"`
 }
 
-var Config config
+var (
+	Config config
+)
+
+var (
+	cliConfig   = flag.String("config", "", "config file")
+	cliUid      = flag.String("uid", "", "115 cookie uid")
+	cliCid      = flag.String("cid", "", "115 cookie cid")
+	cliSeid     = flag.String("seid", "", "115 cookie seid")
+	cliHost     = flag.String("host", "0.0.0.0", "webdav server host")
+	cliPort     = flag.Int("port", 8080, "webdav server port")
+	cliUser     = flag.String("user", "user", "webdav auth username")
+	cliPassword = flag.String("pwd", "123456", "webdav auth password")
+)
 
 func init() {
-	if flag.ConfigFile != "" {
-		load(flag.ConfigFile)
-	} else {
-		Config.Uid = flag.CliUid
-		Config.Cid = flag.CliCid
-		Config.Seid = flag.CliSeid
-		Config.Host = flag.CliHost
-		Config.Port = flag.CliPort
-		Config.User = flag.CliUser
-		Config.Password = flag.CliPassword
+	flag.Parse()
+	if len(*cliConfig) > 0 {
+		load(*cliConfig)
+		return
 	}
+
+	Config.Uid = *cliUid
+	Config.Cid = *cliCid
+	Config.Seid = *cliSeid
+	Config.Host = *cliHost
+	Config.Port = *cliPort
+	Config.User = *cliUser
+	Config.Password = *cliPassword
 }
 
 func load(filename string) {
