@@ -15,7 +15,6 @@ const (
 	UserAgent = "Mozilla/5.0 115Browser/23.9.3.2"
 
 	APIURLGetFiles       = "https://webapi.115.com/files"
-	APIURLGetFileInfo    = "https://webapi.115.com/files/get_info"
 	APIURLGetDownloadURL = "https://proapi.115.com/app/chrome/downurl"
 	APIURLGetDirID       = "https://webapi.115.com/files/getid"
 	APIURLDeleteFile     = "https://webapi.115.com/rb/delete"
@@ -49,20 +48,6 @@ func APIGetFiles(client *resty.Client, cid string, pageSize int64, offset int64)
 	}
 
 	return &result, nil
-}
-
-func APIGetFileInfo(client *resty.Client, fid string) (*APIGetFileInfoResp, error) {
-	result := APIGetFileInfoResp{}
-	_, err := client.R().
-		SetQueryParam("file_id", fid).
-		SetResult(&result).
-		ForceContentType("application/json").
-		Get(APIURLGetFileInfo)
-	if err != nil {
-		return nil, fmt.Errorf("api get file info fail, err: %v", err)
-	}
-
-	return &result, err
 }
 
 func APIGetDownloadURL(client *resty.Client, pickCode string) (*DownloadInfo, error) {
