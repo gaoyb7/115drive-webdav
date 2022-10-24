@@ -50,7 +50,7 @@ func MustNew115DriveClient(uid string, cid string, seid string) *DriveClient {
 	client := &DriveClient{
 		HttpClient: httpClient,
 		cache:      gcache.New(10000).LFU().Build(),
-		limiter:    rate.NewLimiter(8, 0),
+		limiter:    rate.NewLimiter(5, 0),
 		reserveProxy: &httputil.ReverseProxy{
 			Transport: httpClient.GetClient().Transport,
 			Director: func(req *http.Request) {
@@ -140,6 +140,7 @@ func (c *DriveClient) ServeContent(w http.ResponseWriter, req *http.Request, fi 
 		return
 	}
 
+	logrus.Infof("proxy open [name: %v] [range: %v]", fi.GetName(), req.Header.Get("Range"))
 	c.Proxy(w, req, fileURL)
 }
 
