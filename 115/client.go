@@ -133,7 +133,6 @@ func (c *DriveClient) GetFile(filePath string) (drive.File, error) {
 }
 
 func (c *DriveClient) ServeContent(w http.ResponseWriter, req *http.Request, fi drive.File) {
-	c.limiter.Wait(context.Background())
 	fileURL, err := c.GetFileURL(fi)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -318,6 +317,7 @@ func (c *DriveClient) Proxy(w http.ResponseWriter, req *http.Request, targetURL 
 	u, _ := url.Parse(targetURL)
 	req.URL = u
 	req.Host = u.Host
+	c.limiter.Wait(context.Background())
 	c.reserveProxy.ServeHTTP(w, req)
 }
 
