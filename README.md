@@ -1,6 +1,6 @@
 # 115drive-webdav
 
-[![GitHub Actions](https://img.shields.io/github/workflow/status/gaoyb7/115drive-webdav/CI)](https://github.com/gaoyb7/115drive-webdav/actions)
+[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/gaoyb7/115drive-webdav/ci.yml?branch=main)](https://github.com/gaoyb7/115drive-webdav/actions)
 [![Release](https://img.shields.io/github/v/release/gaoyb7/115drive-webdav?display_name=tag)](https://github.com/gaoyb7/115drive-webdav/releases)
 [![Downloads](https://img.shields.io/github/downloads/gaoyb7/115drive-webdav/total)](https://github.com/gaoyb7/115drive-webdav/releases)
 [![Docker Image](https://img.shields.io/docker/pulls/gaoyb7/115drive-webdav)](https://hub.docker.com/r/gaoyb7/115drive-webdav)
