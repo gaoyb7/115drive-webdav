@@ -12,6 +12,7 @@ type config struct {
 	Uid      string `json:"uid"`
 	Cid      string `json:"cid"`
 	Seid     string `json:"seid"`
+	Kid     string `json:"kid"`
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	User     string `json:"user"`
@@ -27,6 +28,7 @@ var (
 	cliUid      = flag.String("uid", "", "115 cookie uid")
 	cliCid      = flag.String("cid", "", "115 cookie cid")
 	cliSeid     = flag.String("seid", "", "115 cookie seid")
+	cliKid     = flag.String("kid", "", "115 cookie kid")
 	cliHost     = flag.String("host", "0.0.0.0", "webdav server host")
 	cliPort     = flag.Int("port", 8080, "webdav server port")
 	cliUser     = flag.String("user", "user", "webdav auth username")
@@ -43,6 +45,7 @@ func init() {
 	Config.Uid = *cliUid
 	Config.Cid = *cliCid
 	Config.Seid = *cliSeid
+	Config.Kid = *cliKid
 	Config.Host = *cliHost
 	Config.Port = *cliPort
 	Config.User = *cliUser
