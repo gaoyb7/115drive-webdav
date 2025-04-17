@@ -18,7 +18,7 @@ var (
 func main() {
 	logrus.SetReportCaller(true)
 	webdavHandler := webdav.Handler{
-		DriveClient: _115.MustNew115DriveClient(cfg.Uid, cfg.Cid, cfg.Seid),
+		DriveClient: _115.MustNew115DriveClient(cfg.Uid, cfg.Cid, cfg.Seid, cfg.Kid),
 		LockSystem:  webdav.NewMemLS(),
 		Logger: func(req *http.Request, err error) {
 			if err != nil {

@@ -13,10 +13,10 @@
 https://github.com/gaoyb7/115drive-webdav/releases
 
 ## 运行
-需要获取 115 网盘 Cookie 信息，包括 UID、CID、SEID，网页版 Cookie 时效较短，建议抓包 App 请求获取 Cookie，iOS 系统可使用 [Stream](https://apps.apple.com/cn/app/stream/id1312141691) 抓包，安卓系统使用抓包精灵
+需要获取 115 网盘 Cookie 信息，包括 UID、CID、SEID、KID，网页版 Cookie 时效较短，建议抓包 App 请求获取 Cookie，iOS 系统可使用 [Stream](https://apps.apple.com/cn/app/stream/id1312141691) 抓包，安卓系统使用抓包精灵
 ```bash
-# xxxx 替换为对应的 UID、CID、SEID 值
-./115drive-webdav --host=0.0.0.0 --port=8080 --user=user --pwd=123456 --uid=xxxxxx --cid=xxxxxxx --seid=xxxxx
+# xxxx 替换为对应的 UID、CID、SEID、KID 值
+./115drive-webdav --host=0.0.0.0 --port=8080 --user=user --pwd=123456 --uid=xxxxxx --cid=xxxxxxx --seid=xxxxx --kid=xxxxxx
 ```
 服务启动成功后，用支持 WebDav 协议的客户端连接即可，不支持浏览器直接打开
 
@@ -31,7 +31,8 @@ docker run -d \
 	--user=user --pwd=123456 \
 	--uid=xxxxxx \
 	--cid=xxxxxx \
-	--seid=xxxxxx
+	--seid=xxxxxx \
+	--kid=xxxxxx
 	
 # 通过配置文件获取配置
 # /path/to/your/config 替换为实际配置文件地址
@@ -59,6 +60,8 @@ docker run -d \
     115 网盘 Cookie，CID
 --seid
     115 网盘 Cookie，SEID
+--kid
+    115 网盘 Cookie，KID
 --config
     从文件中读取配置，参考 config.json.example
 ```

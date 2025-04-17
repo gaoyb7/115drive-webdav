@@ -26,7 +26,7 @@ type DriveClient struct {
 	limiter      *rate.Limiter
 }
 
-func MustNew115DriveClient(uid string, cid string, seid string) *DriveClient {
+func MustNew115DriveClient(uid string, cid string, seid string, kid string) *DriveClient {
 	httpClient := resty.New().SetCookie(&http.Cookie{
 		Name:     "UID",
 		Value:    uid,
@@ -42,6 +42,12 @@ func MustNew115DriveClient(uid string, cid string, seid string) *DriveClient {
 	}).SetCookie(&http.Cookie{
 		Name:     "SEID",
 		Value:    seid,
+		Domain:   "www.115.com",
+		Path:     "/",
+		HttpOnly: true,
+	}).SetCookie(&http.Cookie{
+		Name:     "KID",
+		Value:    kid,
 		Domain:   "www.115.com",
 		Path:     "/",
 		HttpOnly: true,
